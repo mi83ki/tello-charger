@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "TelloCharger",
+			"path": "src/TelloCharger"
+		}
+	],
+	"settings": {}
+}
