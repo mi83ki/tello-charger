@@ -70,3 +70,10 @@ void loop() {
   delay(100); //100ms待機
 }
 ~~~
+
+## 自作ライブラリの取り込み
+
+~~~bash
+cd src/TelloCharger/lib/
+git submodule add https://github.com/mi83ki/ArduinoCommon.git
+~~~
