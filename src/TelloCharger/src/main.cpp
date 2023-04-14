@@ -32,10 +32,35 @@ void GetStatus() {
                 servo2.getTargetAngle());
 }
 
+// MOSFET
+#define CHARGE_CONTROL_PIN G22
+Timer chargeTimer = Timer(3000);
+bool enableCharge = false;
+
+void chargeOn(void) {
+  digitalWrite(CHARGE_CONTROL_PIN, 1);
+  enableCharge = true;
+}
+
+void chargeOff(void) {
+  digitalWrite(CHARGE_CONTROL_PIN, 0);
+  enableCharge = false;
+}
+
+bool isEnableCharge(void) {
+  return enableCharge;
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println("Start example of ServoESP32");
+
+  pinMode(CHARGE_CONTROL_PIN, OUTPUT);
+  chargeOff();
+
   delay(3000);
+  chargeOn();
+  Serial.println("chargeOn");
 }
 
 void loop() {
