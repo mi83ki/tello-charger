@@ -22,3 +22,11 @@ PlatformIOのLibrariesから以下をインストールする
 
 1. M5Atom
 1. FastLED
+
+### サブモジュールの取得
+
+以下のコマンドでサブモジュールを取得する
+
+~~~bash
+git submodule update --init
+~~~
