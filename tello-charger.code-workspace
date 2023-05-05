@@ -8,5 +8,45 @@
 			"path": "src/TelloCharger"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"c-cpp-flylint.clang.enable": true,
+		"c-cpp-flylint.clang.extraArgs": [
+			"-Wno-pragma-once-outside-header"
+		],
+		"c-cpp-flylint.flexelint.enable": false,
+		"c-cpp-flylint.cppcheck.enable": true,
+		"c-cpp-flylint.cppcheck.force": true,
+		"c-cpp-flylint.cppcheck.standard": [
+			"c11",
+			"c++11"
+		],
+		"c-cpp-flylint.lizard.enable": false,
+		"c-cpp-flylint.flawfinder.enable": false,
+		"[cpp]": {
+			"editor.defaultFormatter": "xaver.clang-format"
+		},
+		"files.associations": {
+			"*.ejs": "html",
+			"array": "cpp",
+			"chrono": "cpp",
+			"deque": "cpp",
+			"format": "cpp",
+			"forward_list": "cpp",
+			"initializer_list": "cpp",
+			"list": "cpp",
+			"ranges": "cpp",
+			"regex": "cpp",
+			"span": "cpp",
+			"vector": "cpp",
+			"xhash": "cpp",
+			"xstring": "cpp",
+			"xtree": "cpp",
+			"xutility": "cpp",
+			"string": "cpp",
+			"unordered_map": "cpp",
+			"unordered_set": "cpp",
+			"string_view": "cpp",
+			"sstream": "cpp"
+		},
+	}
 }
