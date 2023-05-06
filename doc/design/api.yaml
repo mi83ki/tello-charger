@@ -1,0 +1,88 @@
+openapi: 3.0.0
+info:
+  title: "Tello Charger API"
+  version: "0.0.0"
+servers:
+  - url: http://{host}:{port}/api/v0
+    description: M5Stack ATOM API
+    variables:
+      host:
+        default: 192.168.X.XXX
+      port:
+        default: "80"
+paths:
+  /charge:
+    get:
+      operationId: tellocharger.controller.get_charge.call
+      summary: 充電状態を返します
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_charge"
+    put:
+      operationId: tellocharger.controller.put_charge.call
+      summary: 充電状態を変更します
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/request_charge"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_charge"
+
+  /power:
+    put:
+      operationId: tellocharger.controller.put_power.call
+      summary: Telloの電源を入れます
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/request_power"
+      responses:
+        "200":
+          description: OK
+
+components:
+  schemas:
+    status_charge:
+      description: 充電状態
+      type: object
+      properties:
+        charge:
+          title: 充電状態
+          type: boolean
+        current:
+          title: 充電電流[A]
+          type: number
+        chargingTime:
+          title: 充電時間[sec]
+          type: number
+      required:
+        - charge
+    request_charge:
+      description: 充電開始/停止要求
+      type: object
+      properties:
+        charge:
+          title: 充電指示（true:充電開始、false:充電終了）
+          type: boolean
+      required:
+        - charge
+    request_power:
+      description: Telloの起動要求
+      type: object
+      properties:
+        power:
+          title: Telloの起動指示
+          type: boolean
+      required:
+        - power
