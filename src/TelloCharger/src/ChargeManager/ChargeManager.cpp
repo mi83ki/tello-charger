@@ -75,6 +75,16 @@ bool ChargeManager::isCharging(void)
 }
 
 /**
+ * @brief 充電時間を取得する
+ *
+ * @return uint32_t 充電時間[ms]
+ */
+uint32_t ChargeManager::getChargeTimeMillis(void)
+{
+  return _controller.getChargeTimeMillis();
+}
+
+/**
  * @brief ループ処理
  *
  */

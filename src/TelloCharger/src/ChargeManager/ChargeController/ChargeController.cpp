@@ -27,11 +27,15 @@ const uint8_t ChargeController::CATCH_CNT = 3;
 ChargeController::ChargeController()
   : _servo(ServoController(SERVO_CATCH_PIN, SERVO_USB_PIN))
   , _fet(FETController(CHARGE_CONTROL_PIN))
+  , _initStep(0)
+  , _chargeStep(0)
   , _startChargeStep(0)
   , _stopChargeStep(0)
   , _powerOnTelloStep(0)
   , _powerOnTelloTimer(Timer())
   , _catchCnt(0)
+  , _catchCntTarget(1)
+  , _chargeTimer(Timer())
 {
 }
 
@@ -44,13 +48,12 @@ ChargeController::~ChargeController() {}
 /**
  * @brief アームを初期位置に戻すループ処理
  *
- * @param step 処理ステップ
  * @return true 処理完了
  * @return false 処理中
  */
-bool ChargeController::_initLoop(uint8_t *step)
+bool ChargeController::_initLoop()
 {
-  switch (*step)
+  switch (_initStep)
   {
     case 0:
       // 何もしない
@@ -58,27 +61,95 @@ bool ChargeController::_initLoop(uint8_t *step)
     case 1:
       // MOSFETをOFFする
       if (_fet.read())
+      {
         _fet.off();
+        _chargeTimer.stopTimer();
+        logger.info("chargeLoop(): stop charge timer, " + String(getChargeTimeMillis()));
+      }
       else
-        (*step)++;
+      {
+        _initStep++;
+      }
       break;
     case 2:
       // USBアームが接続中であれば離す
       if (_servo.isConnectUsb())
         _servo.disconnectUsb();
       else if (_servo.isDisconnectUsb())
-        (*step)++;
+        _initStep++;
       break;
     case 3:
       // 捕獲アームが捕獲中の場合は戻す
       if (_servo.isCatchDrone())
         _servo.releaseDrone();
       else if (_servo.isReleaseDrone())
-        (*step)++;
+        _initStep++;
       break;
     default:
-      // 充電開始完了
-      (*step) = 0;
+      // 初期位置に戻す処理完了
+      _initStep = 0;
+      return true;
+  }
+  return false;
+}
+
+/**
+ * @brief 充電接続するループ処理
+ *
+ * @param catchCnt 捕獲時に繰り返す回数
+ * @return true 処理完了
+ * @return false 処理中
+ */
+bool ChargeController::_chargeLoop(uint8_t catchCnt)
+{
+  switch (_chargeStep)
+  {
+    case 0:
+      // 何もしない
+      break;
+    case 1:
+      // 初期化
+      _catchCnt = 0;
+      _chargeStep++;
+    case 2:
+      // 捕獲する
+      if (_servo.isReleaseDrone())
+      {
+        _servo.catchDrone();
+        _catchCnt++;
+      }
+      else if (_servo.isCatchDrone())
+      {
+        if (_catchCnt >= catchCnt)
+          // 指定した回数捕獲したら次に進む
+          _chargeStep++;
+        else
+          _servo.releaseDrone();
+      }
+      break;
+    case 3:
+      // USBを接続する
+      if (_servo.isDisconnectUsb())
+        _servo.connectUsb();
+      else if (_servo.isConnectUsb())
+        _chargeStep++;
+      break;
+    case 4:
+      // MOSFETをONにする
+      if (!_fet.read())
+      {
+        _fet.on();
+        _chargeTimer.startTimer();
+        logger.info("chargeLoop(): start charge timer");
+      }
+      else
+      {
+        _chargeStep++;
+      }
+      break;
+    default:
+      // 初期位置に戻す処理完了
+      _chargeStep = 0;
       return true;
   }
   return false;
@@ -91,6 +162,18 @@ bool ChargeController::_initLoop(uint8_t *step)
 void ChargeController::startCharge(void)
 {
   _startChargeStep = 1;
+  _catchCntTarget = CATCH_CNT;
+}
+
+/**
+ * @brief 充電を開始する
+ *
+ * @param catchCnt 捕獲繰り返し回数
+ */
+void ChargeController::startCharge(uint8_t catchCnt)
+{
+  _startChargeStep = 1;
+  _catchCntTarget = catchCnt;
 }
 
 /**
@@ -107,42 +190,24 @@ bool ChargeController::_startChargeLoop(void)
       // 何もしない
       break;
     case 1:
+      // 初期処理
+      _initStep = 1;
+      _startChargeStep++;
+      break;
     case 2:
+      // アームを初期位置に戻す
+      if (_initLoop())
+      {
+        _chargeStep = 1;
+        _startChargeStep++;
+      }
+      break;
     case 3:
-      // 初期位置に戻す
-      _initLoop(&_startChargeStep);
-      if (_startChargeStep == 4)
-        _catchCnt = 0;
-      break;
-    case 4:
-      // 捕獲する
-      if (_servo.isReleaseDrone())
+      // 充電接続する
+      if (_chargeLoop(_catchCntTarget))
       {
-        _servo.catchDrone();
-        _catchCnt++;
-      }
-      else if (_servo.isCatchDrone())
-      {
-        if (_catchCnt >= CATCH_CNT)
-          // 指定した回数捕獲したら次に進む
-          _startChargeStep++;
-        else
-          _servo.releaseDrone();
-      }
-      break;
-    case 5:
-      // USBを接続する
-      if (_servo.isDisconnectUsb())
-        _servo.connectUsb();
-      else if (_servo.isConnectUsb())
         _startChargeStep++;
-      break;
-    case 6:
-      // MOSFETをONにする
-      if (!_fet.read())
-        _fet.on();
-      else
-        _startChargeStep++;
+      }
       break;
     default:
       // 充電開始完了
@@ -169,7 +234,29 @@ void ChargeController::stopCharge(void)
  */
 bool ChargeController::_stopChargeLoop(void)
 {
-  return _initLoop(&_stopChargeStep);
+  switch (_stopChargeStep)
+  {
+    case 0:
+      // 何もしない
+      break;
+    case 1:
+      // 初期処理
+      _initStep = 1;
+      _stopChargeStep++;
+      break;
+    case 2:
+      // アームを初期位置に戻す
+      if (_initLoop())
+      {
+        _stopChargeStep++;
+      }
+      break;
+    default:
+      // 充電停止完了
+      _stopChargeStep = 0;
+      return true;
+  }
+  return false;
 }
 
 /**
@@ -196,12 +283,12 @@ bool ChargeController::_powerOnTelloLoop(void)
       break;
     case 1:
       // USBを接続する
-      startCharge();
+      startCharge(1);
       _powerOnTelloStep++;
       break;
     case 2:
       // USB接続を待つ
-      if (isCharging())
+      if (_startChargeStep == 0)
       {
         _powerOnTelloTimer.startTimer();
         _powerOnTelloStep++;
@@ -241,6 +328,16 @@ void ChargeController::wasdControl(char input)
 bool ChargeController::isCharging(void)
 {
   return _servo.isCatchDrone() && _servo.isConnectUsb() && _fet.read();
+}
+
+/**
+ * @brief 充電時間を取得する
+ *
+ * @return uint32_t 充電時間[ms]
+ */
+uint32_t ChargeController::getChargeTimeMillis(void)
+{
+  return _chargeTimer.getTime();
 }
 
 /**

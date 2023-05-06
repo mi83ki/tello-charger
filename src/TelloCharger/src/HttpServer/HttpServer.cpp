@@ -88,9 +88,9 @@ void HttpServer::_onChargeGet(AsyncWebServerRequest *request)
 {
   AsyncJsonResponse *response = new AsyncJsonResponse();
   JsonObject root = response->getRoot();
-  root["charge"] = true;
-  root["current"] = 10;
-  root["chargingTime"] = millis();
+  root["charge"] = _charger->isCharging();
+  root["current"] = 0;
+  root["chargingTime"] = _charger->getChargeTimeMillis();
   response->setLength();
   request->send(response);
   String str = "";
@@ -118,9 +118,9 @@ void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
 
   AsyncJsonResponse *response = new AsyncJsonResponse();
   JsonObject root = response->getRoot();
-  root["charge"] = true;
-  root["current"] = 10;
-  root["chargingTime"] = millis();
+  root["charge"] = _charger->isCharging();
+  root["current"] = 0;
+  root["chargingTime"] = _charger->getChargeTimeMillis();
   response->setLength();
   request->send(response);
   str = "";

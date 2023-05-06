@@ -23,6 +23,7 @@ public:
   void powerOnTello(void);
   void wasdControl(char);
   bool isCharging(void);
+  uint32_t getChargeTimeMillis(void);
   void loop(void);
   String toString(void);
 
