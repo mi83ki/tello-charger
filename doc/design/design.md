@@ -19,6 +19,9 @@ Tello Chargerの設計について記載する。
   - [4.4. 主要部品リスト](#44-主要部品リスト)
 - [5. ソフト設計](#5-ソフト設計)
   - [5.1. API仕様](#51-api仕様)
+  - [コンテキスト図](#コンテキスト図)
+  - [データフロー図](#データフロー図)
+  - [モジュール構造図](#モジュール構造図)
 
 ## 1. Telloとは
 
@@ -97,3 +100,21 @@ RCサーボ2軸で簡単に実現したい。
 
 以下にAPI仕様を記載します。
 [Tello Charger API](api.yaml)
+
+### コンテキスト図
+
+以下にコンテキスト図を記載します。
+
+![Context Diagram](img/contextDiagram.drawio.svg)
+
+### データフロー図
+
+以下にデータフロー図を記載します。
+
+![Dataflow Diagram](img/DFD0.drawio.svg)
+
+### モジュール構造図
+
+以下にモジュール構造図を記載します。
+
+![Module Structure](img/moduleStructure.drawio.svg)
