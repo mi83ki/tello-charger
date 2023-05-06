@@ -16,10 +16,12 @@
 #include <ESPAsyncWebServer.h>
 #include <Log.h>
 
+#include "../ChargeManager/ChargeManager.h"
+
 class HttpServer
 {
 public:
-  HttpServer(uint16_t);
+  HttpServer(uint16_t, ChargeManager *);
   ~HttpServer();
   void begin(void);
   void end(void);
@@ -33,6 +35,8 @@ private:
 
   /** HTTPサーバーインスタンス */
   AsyncWebServer _server;
+  /** 充電管理部のインスタンス */
+  static ChargeManager *_charger;
   /** サーバーが待ち受け中かどうか */
   bool _bAvailable;
 };

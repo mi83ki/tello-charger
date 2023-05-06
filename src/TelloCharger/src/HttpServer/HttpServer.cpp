@@ -9,14 +9,17 @@
 
 #include "HttpServer.h"
 
+ChargeManager *HttpServer::_charger = nullptr;
+
 /**
  * @brief Construct a new Http Server:: Http Server object
- * 
+ *
  * @param httpPort 待ち受けポート番号
  */
-HttpServer::HttpServer(uint16_t httpPort) : _server(AsyncWebServer(httpPort))
+HttpServer::HttpServer(uint16_t httpPort, ChargeManager *charger)
+  : _server(AsyncWebServer(httpPort)), _bAvailable(false)
 {
-  _bAvailable = false;
+  _charger = charger;
   _defineApi();
   _server.onNotFound(_notFound);
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
@@ -25,13 +28,13 @@ HttpServer::HttpServer(uint16_t httpPort) : _server(AsyncWebServer(httpPort))
 
 /**
  * @brief Destroy the Http Server:: Http Server object
- * 
+ *
  */
 HttpServer::~HttpServer() {}
 
 /**
  * @brief HTTPサーバーの待ち受けを開始する
- * 
+ *
  */
 void HttpServer::begin(void)
 {
@@ -45,7 +48,7 @@ void HttpServer::begin(void)
 
 /**
  * @brief HTTPサーバーの待ち受けを停止する
- * 
+ *
  */
 void HttpServer::end(void)
 {
@@ -61,8 +64,8 @@ void HttpServer::end(void)
  * @brief URLで指定されたパスに合致するものが見つからなかったときの振る舞い
  * HTTP_OPTIONSのときだけ200を返すようにしています。これは、CORS対応であり、
  * CORSプリフライトリクエストを正常処理とするためのものです。
- * 
- * @param request 
+ *
+ * @param request
  */
 void HttpServer::_notFound(AsyncWebServerRequest *request)
 {
@@ -78,8 +81,8 @@ void HttpServer::_notFound(AsyncWebServerRequest *request)
 
 /**
  * @brief 充電状態取得要求
- * 
- * @param request 
+ *
+ * @param request
  */
 void HttpServer::_onChargeGet(AsyncWebServerRequest *request)
 {
@@ -97,14 +100,18 @@ void HttpServer::_onChargeGet(AsyncWebServerRequest *request)
 
 /**
  * @brief 充電開始/停止要求
- * 
- * @param request 
- * @param json 
+ *
+ * @param request
+ * @param json
  */
 void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
 {
   JsonObject jsonObj = json.as<JsonObject>();
   bool charge = jsonObj["charge"] | false;
+  if (charge)
+    _charger->startCharge();
+  else
+    _charger->stopCharge();
   String str = "";
   serializeJson(jsonObj, str);
   logger.info("onChargePut: recieve " + str);
@@ -123,14 +130,16 @@ void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
 
 /**
  * @brief Tello電源ON要求
- * 
- * @param request 
- * @param json 
+ *
+ * @param request
+ * @param json
  */
 void HttpServer::_onPowerPut(AsyncWebServerRequest *request, JsonVariant &json)
 {
   JsonObject jsonObj = json.as<JsonObject>();
   bool power = jsonObj["power"] | false;
+  if (power)
+    _charger->powerOnTello();
   String str = "";
   serializeJson(jsonObj, str);
   logger.info("onPowerPut: recieve " + str);
@@ -147,7 +156,7 @@ void HttpServer::_onPowerPut(AsyncWebServerRequest *request, JsonVariant &json)
 
 /**
  * @brief APIの定義
- * 
+ *
  */
 void HttpServer::_defineApi(void)
 {

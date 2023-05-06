@@ -18,20 +18,19 @@ const int16_t ServoController::USB_OFF_ANGLE = -56;
 /** USBを接触させるときのサーボ角度[deg] */
 const int16_t ServoController::USB_ON_ANGLE = 50;
 /** 捕獲サーボの速度[deg/s] */
-const float ServoController::SERVO_CATCH_VEL = 45;
+const float ServoController::SERVO_CATCH_VEL = 60;
 /** USBサーボの速度[deg/s] */
 const float ServoController::SERVO_USB_VEL = 150;
 
 /**
  * @brief Construct a new Servo Controller:: Servo Controller object
- * 
+ *
  * @param catchPin 捕獲サーボの制御PIN
  * @param usbPin USBサーボの制御PIN
  */
 ServoController::ServoController(uint8_t catchPin, uint8_t usbPin)
   : _servoCatch(ServoESP32(0, catchPin, DRONE_RELEASE_ANGLE, SERVO_CATCH_VEL))
   , _servoUsb(ServoESP32(2, usbPin, USB_OFF_ANGLE, SERVO_USB_VEL))
-  , _chargeStep(0)
 {
 }
 
@@ -118,6 +117,50 @@ void ServoController::disconnectUsb(void)
 }
 
 /**
+ * @brief ドローンをキャッチしているかどうか
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ServoController::isCatchDrone(void)
+{
+  return _servoCatch.getPresentAngle() == (float)(DRONE_CATCH_ANGLE);
+}
+
+/**
+ * @brief ドローンをリリースしているかどうか
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ServoController::isReleaseDrone(void)
+{
+  return _servoCatch.getPresentAngle() == (float)(DRONE_RELEASE_ANGLE);
+}
+
+/**
+ * @brief USBを接続しているかどうか
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ServoController::isConnectUsb(void)
+{
+  return _servoUsb.getPresentAngle() == (float)(USB_ON_ANGLE);
+}
+
+/**
+ * @brief USBを切断しているかどうか
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ServoController::isDisconnectUsb(void)
+{
+  return _servoUsb.getPresentAngle() == (float)(USB_OFF_ANGLE);
+}
+
+/**
  * @brief WASDでサーボの角度を微調整する
  *
  * @param input キーボード入力
@@ -142,44 +185,6 @@ void ServoController::wasdControl(char input)
       break;
   }
   logger.info("key = " + String(input) + ", " + toString());
-}
-
-/**
- * @brief 充電処理のサーボ動作を1ステップ進める
- *
- * @return uint8_t 充電処理のステップ
- * 0: リリース状態
- * 1: ドローンをキャッチ
- * 2: 充電開始
- * 3: 充電終了
- */
-uint8_t ServoController::advanceChargeStep(void)
-{
-  _chargeStep = (_chargeStep + 1) % 4;
-  switch (_chargeStep)
-  {
-    case 0:
-      // ドローンをリリースする
-      releaseDrone();
-      break;
-    case 1:
-      // ドローンをキャッチする
-      catchDrone();
-      break;
-    case 2:
-      // 充電開始する
-      connectUsb();
-      break;
-    case 3:
-      // 充電終了する
-      disconnectUsb();
-      break;
-    default:
-      _chargeStep = 0;
-      break;
-  }
-  logger.info("chargeStep = " + String(_chargeStep) + ", " + toString());
-  return _chargeStep;
 }
 
 /**
