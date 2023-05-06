@@ -1,0 +1,42 @@
+/**
+ * @file ServoController.h
+ * @brief サーボモータ制御クラス
+ * @author Tatsuya Miyazaki
+ * @date 2023/5/5
+ *
+ * @details サーボモータを管理するクラス
+ */
+
+#pragma once
+#include <Arduino.h>
+
+#include <ServoESP32.h>
+
+class ServoController
+{
+public:
+  ServoController();
+  ~ServoController();
+  float getServoCatch(void);
+  void setServoCatch(float);
+  float getServoUsb(void);
+  void setServoUsb(float);
+  void catchDrone(void);
+  void releaseDrone(void);
+  void connectUsb(void);
+  void disconnectUsb(void);
+  void loop(void);
+  String toString(void);
+
+private:
+  /** ドローン捕獲サーボ */
+  ServoESP32 servoCatch;
+  /** USBを動かすサーボ */
+  ServoESP32 servoUsb;
+  static const int16_t DRONE_RELEASE_ANGLE;
+  static const int16_t DRONE_CATCH_ANGLE;
+  static const int16_t USB_OFF_ANGLE;
+  static const int16_t USB_ON_ANGLE;
+  static const float SERVO_CATCH_VEL;
+  static const float SERVO_USB_VEL;
+};
