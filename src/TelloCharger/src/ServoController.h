@@ -12,10 +12,13 @@
 
 #include <ServoESP32.h>
 
+#include "Log.h"
+
+
 class ServoController
 {
 public:
-  ServoController();
+  ServoController(uint8_t, uint8_t);
   ~ServoController();
   float getServoCatch(void);
   void setServoCatch(float);
@@ -25,14 +28,19 @@ public:
   void releaseDrone(void);
   void connectUsb(void);
   void disconnectUsb(void);
+  void wasdControl(char);
+  uint8_t advanceChargeStep(void);
   void loop(void);
   String toString(void);
 
 private:
   /** ドローン捕獲サーボ */
-  ServoESP32 servoCatch;
+  ServoESP32 _servoCatch;
   /** USBを動かすサーボ */
-  ServoESP32 servoUsb;
+  ServoESP32 _servoUsb;
+  /** 充電動作の処理ステップ */
+  uint8_t _chargeStep;
+
   static const int16_t DRONE_RELEASE_ANGLE;
   static const int16_t DRONE_CATCH_ANGLE;
   static const int16_t USB_OFF_ANGLE;
