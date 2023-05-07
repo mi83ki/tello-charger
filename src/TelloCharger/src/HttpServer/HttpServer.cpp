@@ -107,25 +107,48 @@ void HttpServer::_onChargeGet(AsyncWebServerRequest *request)
 void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
 {
   JsonObject jsonObj = json.as<JsonObject>();
-  bool charge = jsonObj["charge"] | false;
-  if (charge)
-    _charger->startCharge();
-  else
-    _charger->stopCharge();
   String str = "";
   serializeJson(jsonObj, str);
   logger.info("onChargePut: recieve " + str);
-
-  AsyncJsonResponse *response = new AsyncJsonResponse();
-  JsonObject root = response->getRoot();
-  root["charge"] = _charger->isCharging();
-  root["current"] = 0;
-  root["chargingTime"] = _charger->getChargeTimeMillis();
-  response->setLength();
-  request->send(response);
-  str = "";
-  serializeJson(root, str);
-  logger.info("onChargePut: send " + str);
+  if (jsonObj.containsKey("charge"))
+  {
+    bool charge = jsonObj["charge"];
+    if (charge)
+    {
+      _charger->startCharge();
+      while (!_charger->isCharging())
+      {
+        delay(500);
+        logger.info(".");
+      }
+    }
+    else
+    {
+      _charger->stopCharge();
+      while (!_charger->isInitPos())
+      {
+        delay(500);
+        logger.info(".");
+      }
+    }
+    // レスポンス
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot();
+    root["charge"] = _charger->isCharging();
+    root["current"] = 0;
+    root["chargingTime"] = _charger->getChargeTimeMillis();
+    response->setLength();
+    request->send(response);
+    str = "";
+    serializeJson(root, str);
+    logger.info("onChargePut: send " + str);
+  }
+  else
+  {
+    // chargeのキーがない
+    request->send(400);
+    logger.info("onChargePut: send 400 Bad Request");
+  }
 }
 
 /**
@@ -137,21 +160,37 @@ void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
 void HttpServer::_onPowerPut(AsyncWebServerRequest *request, JsonVariant &json)
 {
   JsonObject jsonObj = json.as<JsonObject>();
-  bool power = jsonObj["power"] | false;
-  if (power)
-    _charger->powerOnTello();
   String str = "";
   serializeJson(jsonObj, str);
   logger.info("onPowerPut: recieve " + str);
+  if (jsonObj.containsKey("power"))
+  {
+    bool power = jsonObj["power"];
+    if (power)
+    {
+      _charger->powerOnTello();
+      while (!_charger->isPowerOnFinished())
+      {
+        delay(500);
+        logger.info(".");
+      }
+    }
 
-  AsyncJsonResponse *response = new AsyncJsonResponse();
-  JsonObject root = response->getRoot();
-  root["power"] = true;
-  response->setLength();
-  request->send(response);
-  str = "";
-  serializeJson(root, str);
-  logger.info("onPowerPut: send " + str);
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot();
+    root["power"] = power;
+    response->setLength();
+    request->send(response);
+    str = "";
+    serializeJson(root, str);
+    logger.info("onPowerPut: send " + str);
+  }
+  else
+  {
+    // powerのキーがない
+    request->send(400);
+    logger.info("onPowerPut: send 400 Bad Request");
+  }
 }
 
 /**

@@ -33,6 +33,7 @@ ChargeController::ChargeController()
   , _stopChargeStep(0)
   , _powerOnTelloStep(0)
   , _powerOnTelloTimer(Timer())
+  , _isPowerOnTelloFinished(false)
   , _catchCnt(0)
   , _catchCntTarget(1)
   , _chargeTimer(Timer())
@@ -266,6 +267,7 @@ bool ChargeController::_stopChargeLoop(void)
 void ChargeController::powerOnTello(void)
 {
   _powerOnTelloStep = 1;
+  _isPowerOnTelloFinished = false;
 }
 
 /**
@@ -302,6 +304,13 @@ bool ChargeController::_powerOnTelloLoop(void)
         _powerOnTelloStep++;
       }
       break;
+    case 4:
+      // 終了を待つ
+      if (_stopChargeStep == 0)
+      {
+        _powerOnTelloStep++;
+      }
+      break;
     default:
       _powerOnTelloStep = 0;
       return true;
@@ -331,6 +340,28 @@ bool ChargeController::isCharging(void)
 }
 
 /**
+ * @brief 初期位置かどうか
+ *
+ * @return true 初期位置
+ * @return false 初期位置でない
+ */
+bool ChargeController::isInitPos(void)
+{
+  return _servo.isReleaseDrone() && _servo.isDisconnectUsb() && !_fet.read();
+}
+
+/**
+ * @brief Tello電源ON処理が完了したかどうか
+ *
+ * @return true 完了
+ * @return false 完了していない
+ */
+bool ChargeController::isPowerOnFinished(void)
+{
+  return _isPowerOnTelloFinished;
+}
+
+/**
  * @brief 充電時間を取得する
  *
  * @return uint32_t 充電時間[ms]
@@ -357,6 +388,7 @@ void ChargeController::loop(void)
   if (_powerOnTelloLoop())
   {
     logger.info("Finish to power on Tello");
+    _isPowerOnTelloFinished = true;
   }
   _servo.loop();
 }

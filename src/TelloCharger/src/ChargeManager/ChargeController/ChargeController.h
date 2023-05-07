@@ -26,6 +26,8 @@ public:
   void powerOnTello(void);
   void wasdControl(char);
   bool isCharging(void);
+  bool isInitPos(void);
+  bool isPowerOnFinished(void);
   uint32_t getChargeTimeMillis(void);
   void loop(void);
   String toString(void);
@@ -60,6 +62,8 @@ private:
   uint8_t _powerOnTelloStep;
   /** Tello電源ON制御用のタイマー */
   Timer _powerOnTelloTimer;
+  /** Tello電源ON制御完了フラグ */
+  bool _isPowerOnTelloFinished;
   /** 充電開始時の捕獲回数 */
   uint8_t _catchCnt;
   /** 充電開始時の捕獲目標回数 */

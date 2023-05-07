@@ -75,6 +75,28 @@ bool ChargeManager::isCharging(void)
 }
 
 /**
+ * @brief 初期位置かどうか
+ *
+ * @return true 初期位置
+ * @return false 初期位置でない
+ */
+bool ChargeManager::isInitPos(void)
+{
+  return _controller.isInitPos();
+}
+
+/**
+ * @brief Tello電源ON処理が完了したかどうか
+ *
+ * @return true 完了
+ * @return false 完了していない
+ */
+bool ChargeManager::isPowerOnFinished(void)
+{
+  return _controller.isPowerOnFinished();
+}
+
+/**
  * @brief 充電時間を取得する
  *
  * @return uint32_t 充電時間[ms]
