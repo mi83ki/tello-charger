@@ -18,7 +18,7 @@ const uint8_t ChargeController::SERVO_USB_PIN = 23;
 /** MOSFETのピン番号 */
 const uint8_t ChargeController::CHARGE_CONTROL_PIN = G22;
 /** 充電開始時に何回捕獲するか */
-const uint8_t ChargeController::CATCH_CNT = 3;
+const uint8_t ChargeController::CATCH_CNT = 2;
 
 /**
  * @brief Construct a new Servo Controller:: Servo Controller object
