@@ -66,6 +66,7 @@ private:
   bool _isPowerOnTelloFinished;
   /** 充電開始時の捕獲回数 */
   uint8_t _catchCnt;
+  uint8_t _chargeRetryCnt;
   /** 充電開始時の捕獲目標回数 */
   uint8_t _catchCntTarget;
   /** 充電時間計測タイマー */

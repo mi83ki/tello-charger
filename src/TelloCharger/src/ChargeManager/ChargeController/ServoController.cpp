@@ -13,10 +13,12 @@
 const int16_t ServoController::DRONE_RELEASE_ANGLE = -31;
 /** ドローンを捕まえるときのサーボ角度[deg] */
 const int16_t ServoController::DRONE_CATCH_ANGLE = 8;
+/** ドローンを位置決めで捕まえるときのサーボ角度[deg] */
+const int16_t ServoController::DRONE_CATCH_ANGLE_ONCE = 14;
 /** USBを離すときのサーボ角度[deg] */
 const int16_t ServoController::USB_OFF_ANGLE = -56;
 /** USBを接触させるときのサーボ角度[deg] */
-const int16_t ServoController::USB_ON_ANGLE = 50;
+const int16_t ServoController::USB_ON_ANGLE = 52;
 /** 捕獲サーボの速度[deg/s] */
 const float ServoController::SERVO_CATCH_VEL = 60;
 /** USBサーボの速度[deg/s] */
@@ -90,6 +92,15 @@ void ServoController::catchDrone(void)
 }
 
 /**
+ * @brief ドローン位置決め捕獲する
+ *
+ */
+void ServoController::catchDroneOnce(void)
+{
+  _servoCatch.setTargetAngle(DRONE_CATCH_ANGLE_ONCE);
+}
+
+/**
  * @brief ドローンをリリースする
  *
  */
@@ -124,7 +135,7 @@ void ServoController::disconnectUsb(void)
  */
 bool ServoController::isCatchDrone(void)
 {
-  return _servoCatch.getPresentAngle() == (float)(DRONE_CATCH_ANGLE);
+  return (_servoCatch.getPresentAngle() == (float)(DRONE_CATCH_ANGLE) || _servoCatch.getPresentAngle() == (float)(DRONE_CATCH_ANGLE_ONCE));
 }
 
 /**

@@ -25,6 +25,7 @@ public:
   float getServoUsb(void);
   void setServoUsb(float);
   void catchDrone(void);
+  void catchDroneOnce(void);
   void releaseDrone(void);
   void connectUsb(void);
   void disconnectUsb(void);
@@ -44,6 +45,7 @@ private:
 
   static const int16_t DRONE_RELEASE_ANGLE;
   static const int16_t DRONE_CATCH_ANGLE;
+  static const int16_t DRONE_CATCH_ANGLE_ONCE;
   static const int16_t USB_OFF_ANGLE;
   static const int16_t USB_ON_ANGLE;
   static const float SERVO_CATCH_VEL;

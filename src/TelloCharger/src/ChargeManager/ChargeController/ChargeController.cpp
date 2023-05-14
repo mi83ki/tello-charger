@@ -35,6 +35,7 @@ ChargeController::ChargeController()
   , _powerOnTelloTimer(Timer())
   , _isPowerOnTelloFinished(false)
   , _catchCnt(0)
+  , _chargeRetryCnt(0)
   , _catchCntTarget(1)
   , _chargeTimer(Timer())
 {
@@ -111,12 +112,20 @@ bool ChargeController::_chargeLoop(uint8_t catchCnt)
     case 1:
       // 初期化
       _catchCnt = 0;
+      _chargeRetryCnt = 0;
       _chargeStep++;
     case 2:
       // 捕獲する
       if (_servo.isReleaseDrone())
       {
-        _servo.catchDrone();
+        if (catchCnt - _catchCnt <= 1)
+        {
+          _servo.catchDrone();
+        }
+        else
+        {
+          _servo.catchDroneOnce();
+        }
         _catchCnt++;
       }
       else if (_servo.isCatchDrone())
@@ -133,7 +142,18 @@ bool ChargeController::_chargeLoop(uint8_t catchCnt)
       if (_servo.isDisconnectUsb())
         _servo.connectUsb();
       else if (_servo.isConnectUsb())
-        _chargeStep++;
+      {
+        if (_chargeRetryCnt < 1)
+        {
+          _catchCnt = 0;
+          _chargeStep = 5;
+          _chargeRetryCnt++;
+        }
+        else
+        {
+          _chargeStep++;
+        }
+      }
       break;
     case 4:
       // MOSFETをONにする
@@ -145,8 +165,14 @@ bool ChargeController::_chargeLoop(uint8_t catchCnt)
       }
       else
       {
-        _chargeStep++;
+        _chargeStep = 99;
       }
+      break;
+    case 5:
+      if (_servo.isConnectUsb())
+        _servo.disconnectUsb();
+      else if (_servo.isDisconnectUsb())
+        _chargeStep = 2;
       break;
     default:
       // 初期位置に戻す処理完了
