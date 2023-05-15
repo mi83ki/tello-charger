@@ -33,10 +33,6 @@ paths:
       responses:
         "200":
           description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/status_charge"
 
   /power:
     put:
@@ -66,6 +62,15 @@ components:
         chargingTime:
           title: 充電時間[sec]
           type: number
+        isStartChargeExecuting:
+          title: 充電開始処理を実行中かどうか
+          type: boolean
+        isStopChargeExecuting:
+          title: 充電停止処理を実行中かどうか
+          type: boolean
+        isPowerOnExecuting:
+          title: ドローンの起動処理を実行中かどうか
+          type: boolean
       required:
         - charge
     request_charge:
@@ -78,11 +83,11 @@ components:
       required:
         - charge
     request_power:
-      description: Telloの起動要求
+      description: ドローンの起動要求
       type: object
       properties:
         power:
-          title: Telloの起動指示
+          title: ドローンの起動指示
           type: boolean
       required:
         - power

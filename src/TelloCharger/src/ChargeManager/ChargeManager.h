@@ -20,11 +20,13 @@ public:
   ~ChargeManager();
   void startCharge(void);
   void stopCharge(void);
-  void powerOnTello(void);
+  void powerOnDrone(void);
   void wasdControl(char);
   bool isCharging(void);
   bool isInitPos(void);
-  bool isPowerOnFinished(void);
+  bool isStartChargeExecuting(void);
+  bool isStopChargeExecuting(void);
+  bool isPowerOnExecuting(void);
   uint32_t getChargeTimeMillis(void);
   void loop(void);
   String toString(void);

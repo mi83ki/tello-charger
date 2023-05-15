@@ -45,12 +45,12 @@ void ChargeManager::stopCharge(void)
 }
 
 /**
- * @brief Telloの電源をONにする
+ * @brief ドローンの電源をONにする
  * 
  */
-void ChargeManager::powerOnTello(void)
+void ChargeManager::powerOnDrone(void)
 {
-  _controller.powerOnTello();
+  _controller.powerOnDrone();
 }
 
 /**
@@ -86,14 +86,36 @@ bool ChargeManager::isInitPos(void)
 }
 
 /**
- * @brief Tello電源ON処理が完了したかどうか
- *
- * @return true 完了
- * @return false 完了していない
+ * @brief 充電開始処理中かどうか
+ * 
+ * @return true 
+ * @return false 
  */
-bool ChargeManager::isPowerOnFinished(void)
+bool ChargeManager::isStartChargeExecuting(void)
 {
-  return _controller.isPowerOnFinished();
+  return _controller.isStartChargeExecuting();
+}
+
+/**
+ * @brief 充電終了処理中かどうか
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ChargeManager::isStopChargeExecuting(void)
+{
+  return _controller.isStopChargeExecuting();
+}
+
+/**
+ * @brief ドローンの起動処理中かどうか
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ChargeManager::isPowerOnExecuting(void)
+{
+  return _controller.isPowerOnExecuting();
 }
 
 /**

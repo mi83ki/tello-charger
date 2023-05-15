@@ -91,6 +91,9 @@ void HttpServer::_onChargeGet(AsyncWebServerRequest *request)
   root["charge"] = _charger->isCharging();
   root["current"] = 0;
   root["chargingTime"] = _charger->getChargeTimeMillis();
+  root["isStartChargeExecuting"] = _charger->isStartChargeExecuting();
+  root["isStopChargeExecuting"] = _charger->isStopChargeExecuting();
+  root["isPowerOnExecuting"] = _charger->isPowerOnExecuting();
   response->setLength();
   request->send(response);
   String str = "";
@@ -114,34 +117,13 @@ void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
   {
     bool charge = jsonObj["charge"];
     if (charge)
-    {
       _charger->startCharge();
-      while (!_charger->isCharging())
-      {
-        delay(500);
-        logger.info(".");
-      }
-    }
     else
-    {
       _charger->stopCharge();
-      while (!_charger->isInitPos())
-      {
-        delay(500);
-        logger.info(".");
-      }
-    }
+
     // レスポンス
-    AsyncJsonResponse *response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot();
-    root["charge"] = _charger->isCharging();
-    root["current"] = 0;
-    root["chargingTime"] = _charger->getChargeTimeMillis();
-    response->setLength();
-    request->send(response);
-    str = "";
-    serializeJson(root, str);
-    logger.info("onChargePut: send " + str);
+    request->send(200);
+    logger.info("onChargePut: send 200 ok");
   }
   else
   {
@@ -152,7 +134,7 @@ void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
 }
 
 /**
- * @brief Tello電源ON要求
+ * @brief ドローン電源ON要求
  *
  * @param request
  * @param json
@@ -168,22 +150,16 @@ void HttpServer::_onPowerPut(AsyncWebServerRequest *request, JsonVariant &json)
     bool power = jsonObj["power"];
     if (power)
     {
-      _charger->powerOnTello();
-      while (!_charger->isPowerOnFinished())
-      {
-        delay(500);
-        logger.info(".");
-      }
+      _charger->powerOnDrone();
+      // レスポンス
+      request->send(200);
+      logger.info("onChargePut: send 200 ok");
     }
-
-    AsyncJsonResponse *response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot();
-    root["power"] = power;
-    response->setLength();
-    request->send(response);
-    str = "";
-    serializeJson(root, str);
-    logger.info("onPowerPut: send " + str);
+    else
+    {
+      request->send(400, "text/plain", "Only support true for power");
+      logger.info("onPowerPut: send 400 Only support true for power");
+    }
   }
   else
   {

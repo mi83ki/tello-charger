@@ -22,12 +22,14 @@ public:
   ~ChargeController();
   void startCharge(void);
   void startCharge(uint8_t);
+  bool isStartChargeExecuting(void);
   void stopCharge(void);
-  void powerOnTello(void);
+  bool isStopChargeExecuting(void);
+  void powerOnDrone(void);
+  bool isPowerOnExecuting(void);
   void wasdControl(char);
   bool isCharging(void);
   bool isInitPos(void);
-  bool isPowerOnFinished(void);
   uint32_t getChargeTimeMillis(void);
   void loop(void);
   String toString(void);
@@ -44,7 +46,7 @@ private:
   bool _chargeLoop(uint8_t);
   bool _startChargeLoop(void);
   bool _stopChargeLoop(void);
-  bool _powerOnTelloLoop(void);
+  bool _powerOnDroneLoop(void);
 
   /** サーボ制御部 */
   ServoController _servo;
@@ -59,11 +61,9 @@ private:
   /** 充電停止制御用の処理ステップ */
   uint8_t _stopChargeStep;
   /** Tello電源ON制御用の処理ステップ */
-  uint8_t _powerOnTelloStep;
+  uint8_t _powerOnDroneStep;
   /** Tello電源ON制御用のタイマー */
-  Timer _powerOnTelloTimer;
-  /** Tello電源ON制御完了フラグ */
-  bool _isPowerOnTelloFinished;
+  Timer _powerOnDroneTimer;
   /** 充電開始時の捕獲回数 */
   uint8_t _catchCnt;
   uint8_t _chargeRetryCnt;

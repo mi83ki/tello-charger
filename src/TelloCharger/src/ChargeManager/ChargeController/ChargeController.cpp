@@ -31,9 +31,8 @@ ChargeController::ChargeController()
   , _chargeStep(0)
   , _startChargeStep(0)
   , _stopChargeStep(0)
-  , _powerOnTelloStep(0)
-  , _powerOnTelloTimer(Timer())
-  , _isPowerOnTelloFinished(false)
+  , _powerOnDroneStep(0)
+  , _powerOnDroneTimer(Timer())
   , _catchCnt(0)
   , _chargeRetryCnt(0)
   , _catchCntTarget(1)
@@ -245,6 +244,17 @@ bool ChargeController::_startChargeLoop(void)
 }
 
 /**
+ * @brief 充電開始処理中かどうか
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ChargeController::isStartChargeExecuting(void)
+{
+  return _startChargeStep != 0;
+}
+
+/**
  * @brief 充電を停止する
  *
  */
@@ -287,61 +297,90 @@ bool ChargeController::_stopChargeLoop(void)
 }
 
 /**
- * @brief Telloの電源をONにする
- *
+ * @brief 充電終了処理中かどうか
+ * 
+ * @return true 
+ * @return false 
  */
-void ChargeController::powerOnTello(void)
+bool ChargeController::isStopChargeExecuting(void)
 {
-  _powerOnTelloStep = 1;
-  _isPowerOnTelloFinished = false;
+  return _stopChargeStep != 0;
 }
 
 /**
- * @brief Telloの電源をONするループ処理
+ * @brief ドローンの電源をONにする
+ *
+ */
+void ChargeController::powerOnDrone(void)
+{
+  _powerOnDroneStep = 1;
+}
+
+/**
+ * @brief ドローンの電源をONするループ処理
  *
  * @return true 処理完了
  * @return false 処理中
  */
-bool ChargeController::_powerOnTelloLoop(void)
+bool ChargeController::_powerOnDroneLoop(void)
 {
-  switch (_powerOnTelloStep)
+  switch (_powerOnDroneStep)
   {
     case 0:
       // 何もしない
       break;
     case 1:
-      // USBを接続する
-      startCharge(1);
-      _powerOnTelloStep++;
+      // 初期処理
+      _initStep = 1;
+      _powerOnDroneStep++;
       break;
     case 2:
-      // USB接続を待つ
-      if (_startChargeStep == 0)
+      // アームを初期位置に戻す
+      if (_initLoop())
       {
-        _powerOnTelloTimer.startTimer();
-        _powerOnTelloStep++;
+        _chargeStep = 1;
+        _powerOnDroneStep++;
       }
       break;
     case 3:
-      // 1秒後に充電を終了する
-      if (_powerOnTelloTimer.getTime() >= 1000)
+      // 充電接続する
+      if (_chargeLoop(_catchCntTarget))
       {
-        stopCharge();
-        _powerOnTelloStep++;
+        _powerOnDroneTimer.startTimer();
+        _powerOnDroneStep++;
       }
       break;
     case 4:
-      // 終了を待つ
-      if (_stopChargeStep == 0)
+      // 1秒後に充電を終了する
+      if (_powerOnDroneTimer.getTime() >= 1000)
       {
-        _powerOnTelloStep++;
+        _initStep = 1;
+        _powerOnDroneStep++;
+      }
+      break;
+    case 5:
+      // アームを初期位置に戻す
+      if (_initLoop())
+      {
+        _powerOnDroneStep++;
       }
       break;
     default:
-      _powerOnTelloStep = 0;
+      _powerOnDroneStep = 0;
       return true;
   }
   return false;
+}
+
+/**
+ * @brief ドローンの起動処理中かどうか
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ChargeController::isPowerOnExecuting(void)
+{
+  return _powerOnDroneStep != 0;
 }
 
 /**
@@ -377,17 +416,6 @@ bool ChargeController::isInitPos(void)
 }
 
 /**
- * @brief Tello電源ON処理が完了したかどうか
- *
- * @return true 完了
- * @return false 完了していない
- */
-bool ChargeController::isPowerOnFinished(void)
-{
-  return _isPowerOnTelloFinished;
-}
-
-/**
  * @brief 充電時間を取得する
  *
  * @return uint32_t 充電時間[ms]
@@ -411,10 +439,9 @@ void ChargeController::loop(void)
   {
     logger.info("Finish to stop charge");
   }
-  if (_powerOnTelloLoop())
+  if (_powerOnDroneLoop())
   {
     logger.info("Finish to power on Tello");
-    _isPowerOnTelloFinished = true;
   }
   _servo.loop();
 }
