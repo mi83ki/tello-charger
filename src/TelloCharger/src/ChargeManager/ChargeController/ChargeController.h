@@ -21,7 +21,7 @@ public:
   ChargeController();
   ~ChargeController();
   void startCharge(void);
-  void startCharge(uint8_t);
+  void startCharge(uint8_t, uint8_t);
   bool isStartChargeExecuting(void);
   void stopCharge(void);
   bool isStopChargeExecuting(void);
@@ -43,7 +43,8 @@ private:
     
   } ChargeStepType;
   bool _initLoop();
-  bool _chargeLoop(uint8_t);
+  bool _chargeLoop(uint8_t, uint8_t);
+  bool _chargeLoop();
   bool _startChargeLoop(void);
   bool _stopChargeLoop(void);
   bool _powerOnDroneLoop(void);
@@ -66,9 +67,12 @@ private:
   Timer _powerOnDroneTimer;
   /** 充電開始時の捕獲回数 */
   uint8_t _catchCnt;
-  uint8_t _chargeRetryCnt;
   /** 充電開始時の捕獲目標回数 */
   uint8_t _catchCntTarget;
+  /** USBを接続するまでの動作を何回行うか */
+  uint8_t _retryCnt;
+  /** USBを接続するまでの動作を行う目標回数 */
+  uint8_t _retryCntTarget;
   /** 充電時間計測タイマー */
   Timer _chargeTimer;
 
@@ -76,4 +80,5 @@ private:
   static const uint8_t SERVO_USB_PIN;
   static const uint8_t CHARGE_CONTROL_PIN;
   static const uint8_t CATCH_CNT;
+  static const uint8_t RETRY_CNT;
 };

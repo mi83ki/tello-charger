@@ -19,6 +19,8 @@ const uint8_t ChargeController::SERVO_USB_PIN = 23;
 const uint8_t ChargeController::CHARGE_CONTROL_PIN = G22;
 /** 充電開始時に何回捕獲するか */
 const uint8_t ChargeController::CATCH_CNT = 2;
+/** 充電開始時に何回USB接続をリトライするか */
+const uint8_t ChargeController::RETRY_CNT = 1;
 
 /**
  * @brief Construct a new Servo Controller:: Servo Controller object
@@ -34,8 +36,9 @@ ChargeController::ChargeController()
   , _powerOnDroneStep(0)
   , _powerOnDroneTimer(Timer())
   , _catchCnt(0)
-  , _chargeRetryCnt(0)
   , _catchCntTarget(1)
+  , _retryCnt(0)
+  , _retryCntTarget(0)
   , _chargeTimer(Timer())
 {
 }
@@ -98,10 +101,11 @@ bool ChargeController::_initLoop()
  * @brief 充電接続するループ処理
  *
  * @param catchCnt 捕獲時に繰り返す回数
+ * @param retryCnt USB接続するまでの動作をリトライする回数
  * @return true 処理完了
  * @return false 処理中
  */
-bool ChargeController::_chargeLoop(uint8_t catchCnt)
+bool ChargeController::_chargeLoop(uint8_t catchCnt, uint8_t retryCnt)
 {
   switch (_chargeStep)
   {
@@ -111,7 +115,7 @@ bool ChargeController::_chargeLoop(uint8_t catchCnt)
     case 1:
       // 初期化
       _catchCnt = 0;
-      _chargeRetryCnt = 0;
+      _retryCnt = 0;
       _chargeStep++;
     case 2:
       // 捕獲する
@@ -142,11 +146,11 @@ bool ChargeController::_chargeLoop(uint8_t catchCnt)
         _servo.connectUsb();
       else if (_servo.isConnectUsb())
       {
-        if (_chargeRetryCnt < 1)
+        if (_retryCnt < retryCnt)
         {
           _catchCnt = 0;
           _chargeStep = 5;
-          _chargeRetryCnt++;
+          _retryCnt++;
         }
         else
         {
@@ -182,6 +186,17 @@ bool ChargeController::_chargeLoop(uint8_t catchCnt)
 }
 
 /**
+ * @brief 充電接続するループ処理（単発動作）
+ *
+ * @return true 処理完了
+ * @return false 処理中
+ */
+bool ChargeController::_chargeLoop(void)
+{
+  return _chargeLoop(1, 0);
+}
+
+/**
  * @brief 充電を開始する
  *
  */
@@ -189,17 +204,20 @@ void ChargeController::startCharge(void)
 {
   _startChargeStep = 1;
   _catchCntTarget = CATCH_CNT;
+  _retryCntTarget = RETRY_CNT;
 }
 
 /**
  * @brief 充電を開始する
  *
  * @param catchCnt 捕獲繰り返し回数
+ * @param retryCnt USB接続するまでの動作をリトライする回数
  */
-void ChargeController::startCharge(uint8_t catchCnt)
+void ChargeController::startCharge(uint8_t catchCnt, uint8_t retryCnt)
 {
   _startChargeStep = 1;
   _catchCntTarget = catchCnt;
+  _retryCntTarget = retryCnt;
 }
 
 /**
@@ -230,7 +248,7 @@ bool ChargeController::_startChargeLoop(void)
       break;
     case 3:
       // 充電接続する
-      if (_chargeLoop(_catchCntTarget))
+      if (_chargeLoop(_catchCntTarget, _retryCntTarget))
       {
         _startChargeStep++;
       }
@@ -344,7 +362,7 @@ bool ChargeController::_powerOnDroneLoop(void)
       break;
     case 3:
       // 充電接続する
-      if (_chargeLoop(_catchCntTarget))
+      if (_chargeLoop())
       {
         _powerOnDroneTimer.startTimer();
         _powerOnDroneStep++;

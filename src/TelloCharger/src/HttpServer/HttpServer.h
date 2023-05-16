@@ -30,7 +30,7 @@ private:
   static void _notFound(AsyncWebServerRequest *);
   static void _onChargeGet(AsyncWebServerRequest *);
   static void _onChargePut(AsyncWebServerRequest *, JsonVariant &);
-  static void _onPowerPut(AsyncWebServerRequest *, JsonVariant &);
+  static void _onPowerOnPut(AsyncWebServerRequest *);
   void _defineApi(void);
 
   /** HTTPサーバーインスタンス */

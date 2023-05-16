@@ -137,36 +137,13 @@ void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
  * @brief ドローン電源ON要求
  *
  * @param request
- * @param json
  */
-void HttpServer::_onPowerPut(AsyncWebServerRequest *request, JsonVariant &json)
+void HttpServer::_onPowerOnPut(AsyncWebServerRequest *request)
 {
-  JsonObject jsonObj = json.as<JsonObject>();
-  String str = "";
-  serializeJson(jsonObj, str);
-  logger.info("onPowerPut: recieve " + str);
-  if (jsonObj.containsKey("power"))
-  {
-    bool power = jsonObj["power"];
-    if (power)
-    {
-      _charger->powerOnDrone();
-      // レスポンス
-      request->send(200);
-      logger.info("onChargePut: send 200 ok");
-    }
-    else
-    {
-      request->send(400, "text/plain", "Only support true for power");
-      logger.info("onPowerPut: send 400 Only support true for power");
-    }
-  }
-  else
-  {
-    // powerのキーがない
-    request->send(400);
-    logger.info("onPowerPut: send 400 Bad Request");
-  }
+  _charger->powerOnDrone();
+  // レスポンス
+  request->send(200);
+  logger.info("onChargePut: send 200 ok");
 }
 
 /**
@@ -178,6 +155,5 @@ void HttpServer::_defineApi(void)
   _server.on("/charge", HTTP_GET, _onChargeGet);
   AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/charge", _onChargePut);
   _server.addHandler(handler);
-  handler = new AsyncCallbackJsonWebHandler("/power", _onPowerPut);
-  _server.addHandler(handler);
+  _server.on("/power/on", HTTP_PUT, _onPowerOnPut);
 }
