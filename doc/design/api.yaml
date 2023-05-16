@@ -34,15 +34,10 @@ paths:
         "200":
           description: OK
 
-  /power:
+  /power/on:
     put:
       operationId: tellocharger.controller.put_power.call
       summary: Telloの電源を入れます
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/request_power"
       responses:
         "200":
           description: OK
@@ -82,12 +77,3 @@ components:
           type: boolean
       required:
         - charge
-    request_power:
-      description: ドローンの起動要求
-      type: object
-      properties:
-        power:
-          title: ドローンの起動指示
-          type: boolean
-      required:
-        - power
