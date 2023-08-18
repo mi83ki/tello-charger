@@ -81,4 +81,5 @@ private:
   static const uint8_t CHARGE_CONTROL_PIN;
   static const uint8_t CATCH_CNT;
   static const uint8_t RETRY_CNT;
+  static const uint16_t POWER_ON_WAIT;
 };

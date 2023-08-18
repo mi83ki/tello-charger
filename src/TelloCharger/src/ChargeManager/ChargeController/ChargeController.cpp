@@ -21,6 +21,8 @@ const uint8_t ChargeController::CHARGE_CONTROL_PIN = G22;
 const uint8_t ChargeController::CATCH_CNT = 2;
 /** 充電開始時に何回USB接続をリトライするか */
 const uint8_t ChargeController::RETRY_CNT = 1;
+/** 電源ON時に接続したアームを離すまでの時間[ms] */
+const uint16_t ChargeController::POWER_ON_WAIT = 2000;
 
 /**
  * @brief Construct a new Servo Controller:: Servo Controller object
@@ -370,7 +372,7 @@ bool ChargeController::_powerOnDroneLoop(void)
       break;
     case 4:
       // 1秒後に充電を終了する
-      if (_powerOnDroneTimer.getTime() >= 1000)
+      if (_powerOnDroneTimer.getTime() >= POWER_ON_WAIT)
       {
         _initStep = 1;
         _powerOnDroneStep++;
