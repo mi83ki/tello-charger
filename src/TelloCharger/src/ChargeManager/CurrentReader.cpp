@@ -73,7 +73,6 @@ void CurrentReader::loop() {
     float current = _getCurrent();
     _current =
         FIX_TO_FLOAT(_movAveFilter.movingAverage(FLOAT_TO_FIX(current)));
-    logger.info(String(current) + ", " + String(_current));
   }
 }
 
