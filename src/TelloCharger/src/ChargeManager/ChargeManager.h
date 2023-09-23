@@ -12,6 +12,7 @@
 
 #include <Timer.h>
 #include "ChargeController/ChargeController.h"
+#include "ChargeManager/CurrentReader.h"
 
 class ChargeManager
 {
@@ -28,9 +29,11 @@ public:
   bool isStopChargeExecuting(void);
   bool isPowerOnExecuting(void);
   uint32_t getChargeTimeMillis(void);
+  float getCurrent(void);
   void loop(void);
   String toString(void);
 
 private:
   ChargeController _controller;
+  CurrentReader _ina;
 };

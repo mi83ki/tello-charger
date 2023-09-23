@@ -15,10 +15,7 @@
  * @brief Construct a new Servo Controller:: Servo Controller object
  *
  */
-ChargeManager::ChargeManager()
-  : _controller(ChargeController())
-{
-}
+ChargeManager::ChargeManager() : _controller(ChargeController()), _ina(CurrentReader()) {}
 
 /**
  * @brief Destroy the Servo Controller:: Servo Controller object
@@ -28,7 +25,7 @@ ChargeManager::~ChargeManager() {}
 
 /**
  * @brief 充電を開始する
- * 
+ *
  */
 void ChargeManager::startCharge(void)
 {
@@ -37,7 +34,7 @@ void ChargeManager::startCharge(void)
 
 /**
  * @brief 充電を停止する
- * 
+ *
  */
 void ChargeManager::stopCharge(void)
 {
@@ -46,7 +43,7 @@ void ChargeManager::stopCharge(void)
 
 /**
  * @brief ドローンの電源をONにする
- * 
+ *
  */
 void ChargeManager::powerOnDrone(void)
 {
@@ -65,7 +62,7 @@ void ChargeManager::wasdControl(char input)
 
 /**
  * @brief 充電中かどうか
- * 
+ *
  * @return true 充電中
  * @return false 充電中でない
  */
@@ -87,9 +84,9 @@ bool ChargeManager::isInitPos(void)
 
 /**
  * @brief 充電開始処理中かどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
 bool ChargeManager::isStartChargeExecuting(void)
 {
@@ -98,9 +95,9 @@ bool ChargeManager::isStartChargeExecuting(void)
 
 /**
  * @brief 充電終了処理中かどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
 bool ChargeManager::isStopChargeExecuting(void)
 {
@@ -109,9 +106,9 @@ bool ChargeManager::isStopChargeExecuting(void)
 
 /**
  * @brief ドローンの起動処理中かどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
 bool ChargeManager::isPowerOnExecuting(void)
 {
@@ -126,6 +123,16 @@ bool ChargeManager::isPowerOnExecuting(void)
 uint32_t ChargeManager::getChargeTimeMillis(void)
 {
   return _controller.getChargeTimeMillis();
+}
+
+/**
+ * @brief 電流値を取得する
+ * 
+ * @return float 電流値[mA]
+ */
+float ChargeManager::getCurrent(void)
+{
+  return _ina.getCurrent();
 }
 
 /**
