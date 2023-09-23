@@ -9,14 +9,13 @@
 
 #pragma once
 #include <Arduino.h>
-
 #include <Timer.h>
+
 #include "ChargeController/ChargeController.h"
 #include "ChargeManager/CurrentReader.h"
 
-class ChargeManager
-{
-public:
+class ChargeManager {
+ public:
   ChargeManager();
   ~ChargeManager();
   void startCharge(void);
@@ -33,7 +32,7 @@ public:
   void loop(void);
   String toString(void);
 
-private:
+ private:
   ChargeController _controller;
   CurrentReader _ina;
 };

@@ -9,15 +9,12 @@
 
 #pragma once
 #include <Arduino.h>
-
 #include <ServoESP32.h>
 
 #include "Log.h"
 
-
-class ServoController
-{
-public:
+class ServoController {
+ public:
   ServoController(uint8_t, uint8_t);
   ~ServoController();
   float getServoCatch(void);
@@ -37,7 +34,7 @@ public:
   void loop(void);
   String toString(void);
 
-private:
+ private:
   /** ドローン捕獲サーボ */
   ServoESP32 _servoCatch;
   /** USBを動かすサーボ */

@@ -31,10 +31,9 @@ const float ServoController::SERVO_USB_VEL = 150;
  * @param usbPin USBサーボの制御PIN
  */
 ServoController::ServoController(uint8_t catchPin, uint8_t usbPin)
-  : _servoCatch(ServoESP32(0, catchPin, DRONE_RELEASE_ANGLE, SERVO_CATCH_VEL))
-  , _servoUsb(ServoESP32(2, usbPin, USB_OFF_ANGLE, SERVO_USB_VEL))
-{
-}
+    : _servoCatch(
+          ServoESP32(0, catchPin, DRONE_RELEASE_ANGLE, SERVO_CATCH_VEL)),
+      _servoUsb(ServoESP32(2, usbPin, USB_OFF_ANGLE, SERVO_USB_VEL)) {}
 
 /**
  * @brief Destroy the Servo Controller:: Servo Controller object
@@ -47,8 +46,7 @@ ServoController::~ServoController() {}
  *
  * @return float 捕獲サーボの角度
  */
-float ServoController::getServoCatch(void)
-{
+float ServoController::getServoCatch(void) {
   return _servoCatch.getTargetAngle();
 }
 
@@ -57,8 +55,7 @@ float ServoController::getServoCatch(void)
  *
  * @param angle 捕獲サーボの角度
  */
-void ServoController::setServoCatch(float angle)
-{
+void ServoController::setServoCatch(float angle) {
   _servoCatch.setTargetAngle(angle);
 }
 
@@ -67,18 +64,14 @@ void ServoController::setServoCatch(float angle)
  *
  * @return float USBサーボの角度
  */
-float ServoController::getServoUsb(void)
-{
-  return _servoUsb.getTargetAngle();
-}
+float ServoController::getServoUsb(void) { return _servoUsb.getTargetAngle(); }
 
 /**
  * @brief USBサーボの角度を指定する
  *
  * @param angle USBサーボの角度
  */
-void ServoController::setServoUsb(float angle)
-{
+void ServoController::setServoUsb(float angle) {
   _servoUsb.setTargetAngle(angle);
 }
 
@@ -86,8 +79,7 @@ void ServoController::setServoUsb(float angle)
  * @brief ドローンを捕獲する
  *
  */
-void ServoController::catchDrone(void)
-{
+void ServoController::catchDrone(void) {
   _servoCatch.setTargetAngle(DRONE_CATCH_ANGLE);
 }
 
@@ -95,8 +87,7 @@ void ServoController::catchDrone(void)
  * @brief ドローン位置決め捕獲する
  *
  */
-void ServoController::catchDroneOnce(void)
-{
+void ServoController::catchDroneOnce(void) {
   _servoCatch.setTargetAngle(DRONE_CATCH_ANGLE_ONCE);
 }
 
@@ -104,8 +95,7 @@ void ServoController::catchDroneOnce(void)
  * @brief ドローンをリリースする
  *
  */
-void ServoController::releaseDrone(void)
-{
+void ServoController::releaseDrone(void) {
   _servoCatch.setTargetAngle(DRONE_RELEASE_ANGLE);
 }
 
@@ -113,8 +103,7 @@ void ServoController::releaseDrone(void)
  * @brief USBを接続する
  *
  */
-void ServoController::connectUsb(void)
-{
+void ServoController::connectUsb(void) {
   _servoUsb.setTargetAngle(USB_ON_ANGLE);
 }
 
@@ -122,52 +111,48 @@ void ServoController::connectUsb(void)
  * @brief USBを切断する
  *
  */
-void ServoController::disconnectUsb(void)
-{
+void ServoController::disconnectUsb(void) {
   _servoUsb.setTargetAngle(USB_OFF_ANGLE);
 }
 
 /**
  * @brief ドローンをキャッチしているかどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
-bool ServoController::isCatchDrone(void)
-{
-  return (_servoCatch.getPresentAngle() == (float)(DRONE_CATCH_ANGLE) || _servoCatch.getPresentAngle() == (float)(DRONE_CATCH_ANGLE_ONCE));
+bool ServoController::isCatchDrone(void) {
+  return (_servoCatch.getPresentAngle() == (float)(DRONE_CATCH_ANGLE) ||
+          _servoCatch.getPresentAngle() == (float)(DRONE_CATCH_ANGLE_ONCE));
 }
 
 /**
  * @brief ドローンをリリースしているかどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
-bool ServoController::isReleaseDrone(void)
-{
+bool ServoController::isReleaseDrone(void) {
   return _servoCatch.getPresentAngle() == (float)(DRONE_RELEASE_ANGLE);
 }
 
 /**
  * @brief USBを接続しているかどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
-bool ServoController::isConnectUsb(void)
-{
+bool ServoController::isConnectUsb(void) {
   return _servoUsb.getPresentAngle() == (float)(USB_ON_ANGLE);
 }
 
 /**
  * @brief USBを切断しているかどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
-bool ServoController::isDisconnectUsb(void)
-{
+bool ServoController::isDisconnectUsb(void) {
   return _servoUsb.getPresentAngle() == (float)(USB_OFF_ANGLE);
 }
 
@@ -176,10 +161,8 @@ bool ServoController::isDisconnectUsb(void)
  *
  * @param input キーボード入力
  */
-void ServoController::wasdControl(char input)
-{
-  switch (input)
-  {
+void ServoController::wasdControl(char input) {
+  switch (input) {
     case 'w':
       setServoUsb(getServoUsb() + 1);
       break;
@@ -202,8 +185,7 @@ void ServoController::wasdControl(char input)
  * @brief ループ処理
  *
  */
-void ServoController::loop(void)
-{
+void ServoController::loop(void) {
   _servoCatch.loop();
   _servoUsb.loop();
 }
@@ -213,8 +195,8 @@ void ServoController::loop(void)
  *
  * @return String サーボ角度の文字列
  */
-String ServoController::toString(void)
-{
-  return ("Servo Angle (catch, usb) = (" + String(_servoCatch.getTargetAngle()) + ", " +
+String ServoController::toString(void) {
+  return ("Servo Angle (catch, usb) = (" +
+          String(_servoCatch.getTargetAngle()) + ", " +
           String(_servoUsb.getTargetAngle()) + ")\n");
 }

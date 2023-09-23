@@ -17,8 +17,7 @@ ChargeManager *HttpServer::_charger = nullptr;
  * @param httpPort 待ち受けポート番号
  */
 HttpServer::HttpServer(uint16_t httpPort, ChargeManager *charger)
-  : _server(AsyncWebServer(httpPort)), _bAvailable(false)
-{
+    : _server(AsyncWebServer(httpPort)), _bAvailable(false) {
   _charger = charger;
   _defineApi();
   _server.onNotFound(_notFound);
@@ -36,10 +35,8 @@ HttpServer::~HttpServer() {}
  * @brief HTTPサーバーの待ち受けを開始する
  *
  */
-void HttpServer::begin(void)
-{
-  if (!_bAvailable)
-  {
+void HttpServer::begin(void) {
+  if (!_bAvailable) {
     logger.info("HttpServer::begin(): Start Http Server");
     _server.begin();
     _bAvailable = true;
@@ -50,10 +47,8 @@ void HttpServer::begin(void)
  * @brief HTTPサーバーの待ち受けを停止する
  *
  */
-void HttpServer::end(void)
-{
-  if (_bAvailable)
-  {
+void HttpServer::end(void) {
+  if (_bAvailable) {
     logger.info("HttpServer::end(): Stop Http Server");
     _server.end();
     _bAvailable = false;
@@ -67,14 +62,10 @@ void HttpServer::end(void)
  *
  * @param request
  */
-void HttpServer::_notFound(AsyncWebServerRequest *request)
-{
-  if (request->method() == HTTP_OPTIONS)
-  {
+void HttpServer::_notFound(AsyncWebServerRequest *request) {
+  if (request->method() == HTTP_OPTIONS) {
     request->send(200);
-  }
-  else
-  {
+  } else {
     request->send(404);
   }
 }
@@ -84,8 +75,7 @@ void HttpServer::_notFound(AsyncWebServerRequest *request)
  *
  * @param request
  */
-void HttpServer::_onChargeGet(AsyncWebServerRequest *request)
-{
+void HttpServer::_onChargeGet(AsyncWebServerRequest *request) {
   AsyncJsonResponse *response = new AsyncJsonResponse();
   JsonObject root = response->getRoot();
   root["charge"] = _charger->isCharging();
@@ -107,14 +97,13 @@ void HttpServer::_onChargeGet(AsyncWebServerRequest *request)
  * @param request
  * @param json
  */
-void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
-{
+void HttpServer::_onChargePut(AsyncWebServerRequest *request,
+                              JsonVariant &json) {
   JsonObject jsonObj = json.as<JsonObject>();
   String str = "";
   serializeJson(jsonObj, str);
   logger.info("onChargePut: recieve " + str);
-  if (jsonObj.containsKey("charge"))
-  {
+  if (jsonObj.containsKey("charge")) {
     bool charge = jsonObj["charge"];
     if (charge)
       _charger->startCharge();
@@ -124,9 +113,7 @@ void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
     // レスポンス
     request->send(200);
     logger.info("onChargePut: send 200 ok");
-  }
-  else
-  {
+  } else {
     // chargeのキーがない
     request->send(400);
     logger.info("onChargePut: send 400 Bad Request");
@@ -138,8 +125,7 @@ void HttpServer::_onChargePut(AsyncWebServerRequest *request, JsonVariant &json)
  *
  * @param request
  */
-void HttpServer::_onPowerOnPut(AsyncWebServerRequest *request)
-{
+void HttpServer::_onPowerOnPut(AsyncWebServerRequest *request) {
   _charger->powerOnDrone();
   // レスポンス
   request->send(200);
@@ -150,10 +136,10 @@ void HttpServer::_onPowerOnPut(AsyncWebServerRequest *request)
  * @brief APIの定義
  *
  */
-void HttpServer::_defineApi(void)
-{
+void HttpServer::_defineApi(void) {
   _server.on("/charge", HTTP_GET, _onChargeGet);
-  AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/charge", _onChargePut);
+  AsyncCallbackJsonWebHandler *handler =
+      new AsyncCallbackJsonWebHandler("/charge", _onChargePut);
   _server.addHandler(handler);
   _server.on("/power/on", HTTP_PUT, _onPowerOnPut);
 }

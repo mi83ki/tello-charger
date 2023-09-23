@@ -18,15 +18,11 @@ Adafruit_INA219 ina219;
  * @brief Constdsruct a new CurrentReader::CurrentReader object
  *
  */
-CurrentReader::CurrentReader() : _isConnect(false)
-{
+CurrentReader::CurrentReader() : _isConnect(false) {
   Wire1.begin(26, 32);
-  if (!ina219.begin())
-  {
+  if (!ina219.begin()) {
     logger.error("CurrentReader(): Failed to find INA219 chip");
-  }
-  else
-  {
+  } else {
     _isConnect = true;
   }
 }
@@ -43,20 +39,15 @@ CurrentReader::~CurrentReader() {}
  * @return true 接続している
  * @return false
  */
-bool CurrentReader::isConnect(void)
-{
-  return _isConnect;
-}
+bool CurrentReader::isConnect(void) { return _isConnect; }
 
 /**
  * @brief 電流値を取得する
- * 
+ *
  * @return float 電流値[mA]
  */
-float CurrentReader::getCurrent(void)
-{
-  if (isConnect())
-  {
+float CurrentReader::getCurrent(void) {
+  if (isConnect()) {
     return ina219.getCurrent_mA();
   }
   return 0.0;
@@ -66,8 +57,7 @@ float CurrentReader::getCurrent(void)
  * @brief 電流センサ読込テスト
  *
  */
-void CurrentReader::readIna219(void)
-{
+void CurrentReader::readIna219(void) {
   float shuntvoltage = 0;
   float busvoltage = 0;
   float current_mA = 0;

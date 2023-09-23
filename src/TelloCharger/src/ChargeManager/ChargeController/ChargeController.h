@@ -9,15 +9,13 @@
 
 #pragma once
 #include <Arduino.h>
-
 #include <Timer.h>
 
 #include "FETController.h"
 #include "ServoController.h"
 
-class ChargeController
-{
-public:
+class ChargeController {
+ public:
   ChargeController();
   ~ChargeController();
   void startCharge(void);
@@ -34,13 +32,12 @@ public:
   void loop(void);
   String toString(void);
 
-private:
-  typedef enum eCharge
-  {
+ private:
+  typedef enum eCharge {
     IDLE,
     START_CHARGE,
     STOP_CHARGE,
-    
+
   } ChargeStepType;
   bool _initLoop();
   bool _chargeLoop(uint8_t, uint8_t);

@@ -10,16 +10,15 @@
 #pragma once
 #include <Arduino.h>
 
-class FETController
-{
-public:
+class FETController {
+ public:
   FETController(uint8_t);
   ~FETController();
   void on(void);
   void off(void);
   bool read(void);
 
-private:
+ private:
   /** 制御ピン */
   uint8_t _pin;
 };

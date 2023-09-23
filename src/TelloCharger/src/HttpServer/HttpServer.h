@@ -9,7 +9,6 @@
 
 #pragma once
 #include <Arduino.h>
-
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <AsyncTCP.h>
@@ -18,15 +17,14 @@
 
 #include "../ChargeManager/ChargeManager.h"
 
-class HttpServer
-{
-public:
+class HttpServer {
+ public:
   HttpServer(uint16_t, ChargeManager *);
   ~HttpServer();
   void begin(void);
   void end(void);
 
-private:
+ private:
   static void _notFound(AsyncWebServerRequest *);
   static void _onChargeGet(AsyncWebServerRequest *);
   static void _onChargePut(AsyncWebServerRequest *, JsonVariant &);

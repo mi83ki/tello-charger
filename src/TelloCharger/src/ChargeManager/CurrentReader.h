@@ -8,15 +8,14 @@
 
 #pragma once
 
-class CurrentReader
-{
-public:
+class CurrentReader {
+ public:
   CurrentReader();
   ~CurrentReader();
   bool isConnect(void);
   float getCurrent(void);
   void readIna219(void);
 
-private:
+ private:
   bool _isConnect;
 };

@@ -29,21 +29,19 @@ const uint16_t ChargeController::POWER_ON_WAIT = 2000;
  *
  */
 ChargeController::ChargeController()
-  : _servo(ServoController(SERVO_CATCH_PIN, SERVO_USB_PIN))
-  , _fet(FETController(CHARGE_CONTROL_PIN))
-  , _initStep(0)
-  , _chargeStep(0)
-  , _startChargeStep(0)
-  , _stopChargeStep(0)
-  , _powerOnDroneStep(0)
-  , _powerOnDroneTimer(Timer())
-  , _catchCnt(0)
-  , _catchCntTarget(1)
-  , _retryCnt(0)
-  , _retryCntTarget(0)
-  , _chargeTimer(Timer())
-{
-}
+    : _servo(ServoController(SERVO_CATCH_PIN, SERVO_USB_PIN)),
+      _fet(FETController(CHARGE_CONTROL_PIN)),
+      _initStep(0),
+      _chargeStep(0),
+      _startChargeStep(0),
+      _stopChargeStep(0),
+      _powerOnDroneStep(0),
+      _powerOnDroneTimer(Timer()),
+      _catchCnt(0),
+      _catchCntTarget(1),
+      _retryCnt(0),
+      _retryCntTarget(0),
+      _chargeTimer(Timer()) {}
 
 /**
  * @brief Destroy the Servo Controller:: Servo Controller object
@@ -57,23 +55,19 @@ ChargeController::~ChargeController() {}
  * @return true 処理完了
  * @return false 処理中
  */
-bool ChargeController::_initLoop()
-{
-  switch (_initStep)
-  {
+bool ChargeController::_initLoop() {
+  switch (_initStep) {
     case 0:
       // 何もしない
       break;
     case 1:
       // MOSFETをOFFする
-      if (_fet.read())
-      {
+      if (_fet.read()) {
         _fet.off();
         _chargeTimer.stopTimer();
-        logger.info("chargeLoop(): stop charge timer, " + String(getChargeTimeMillis()));
-      }
-      else
-      {
+        logger.info("chargeLoop(): stop charge timer, " +
+                    String(getChargeTimeMillis()));
+      } else {
         _initStep++;
       }
       break;
@@ -107,10 +101,8 @@ bool ChargeController::_initLoop()
  * @return true 処理完了
  * @return false 処理中
  */
-bool ChargeController::_chargeLoop(uint8_t catchCnt, uint8_t retryCnt)
-{
-  switch (_chargeStep)
-  {
+bool ChargeController::_chargeLoop(uint8_t catchCnt, uint8_t retryCnt) {
+  switch (_chargeStep) {
     case 0:
       // 何もしない
       break;
@@ -121,20 +113,14 @@ bool ChargeController::_chargeLoop(uint8_t catchCnt, uint8_t retryCnt)
       _chargeStep++;
     case 2:
       // 捕獲する
-      if (_servo.isReleaseDrone())
-      {
-        if (catchCnt - _catchCnt <= 1)
-        {
+      if (_servo.isReleaseDrone()) {
+        if (catchCnt - _catchCnt <= 1) {
           _servo.catchDrone();
-        }
-        else
-        {
+        } else {
           _servo.catchDroneOnce();
         }
         _catchCnt++;
-      }
-      else if (_servo.isCatchDrone())
-      {
+      } else if (_servo.isCatchDrone()) {
         if (_catchCnt >= catchCnt)
           // 指定した回数捕獲したら次に進む
           _chargeStep++;
@@ -146,30 +132,23 @@ bool ChargeController::_chargeLoop(uint8_t catchCnt, uint8_t retryCnt)
       // USBを接続する
       if (_servo.isDisconnectUsb())
         _servo.connectUsb();
-      else if (_servo.isConnectUsb())
-      {
-        if (_retryCnt < retryCnt)
-        {
+      else if (_servo.isConnectUsb()) {
+        if (_retryCnt < retryCnt) {
           _catchCnt = 0;
           _chargeStep = 5;
           _retryCnt++;
-        }
-        else
-        {
+        } else {
           _chargeStep++;
         }
       }
       break;
     case 4:
       // MOSFETをONにする
-      if (!_fet.read())
-      {
+      if (!_fet.read()) {
         _fet.on();
         _chargeTimer.startTimer();
         logger.info("chargeLoop(): start charge timer");
-      }
-      else
-      {
+      } else {
         _chargeStep = 99;
       }
       break;
@@ -193,17 +172,13 @@ bool ChargeController::_chargeLoop(uint8_t catchCnt, uint8_t retryCnt)
  * @return true 処理完了
  * @return false 処理中
  */
-bool ChargeController::_chargeLoop(void)
-{
-  return _chargeLoop(1, 0);
-}
+bool ChargeController::_chargeLoop(void) { return _chargeLoop(1, 0); }
 
 /**
  * @brief 充電を開始する
  *
  */
-void ChargeController::startCharge(void)
-{
+void ChargeController::startCharge(void) {
   _startChargeStep = 1;
   _catchCntTarget = CATCH_CNT;
   _retryCntTarget = RETRY_CNT;
@@ -215,8 +190,7 @@ void ChargeController::startCharge(void)
  * @param catchCnt 捕獲繰り返し回数
  * @param retryCnt USB接続するまでの動作をリトライする回数
  */
-void ChargeController::startCharge(uint8_t catchCnt, uint8_t retryCnt)
-{
+void ChargeController::startCharge(uint8_t catchCnt, uint8_t retryCnt) {
   _startChargeStep = 1;
   _catchCntTarget = catchCnt;
   _retryCntTarget = retryCnt;
@@ -228,10 +202,8 @@ void ChargeController::startCharge(uint8_t catchCnt, uint8_t retryCnt)
  * @return true 処理完了
  * @return false 処理中
  */
-bool ChargeController::_startChargeLoop(void)
-{
-  switch (_startChargeStep)
-  {
+bool ChargeController::_startChargeLoop(void) {
+  switch (_startChargeStep) {
     case 0:
       // 何もしない
       break;
@@ -242,16 +214,14 @@ bool ChargeController::_startChargeLoop(void)
       break;
     case 2:
       // アームを初期位置に戻す
-      if (_initLoop())
-      {
+      if (_initLoop()) {
         _chargeStep = 1;
         _startChargeStep++;
       }
       break;
     case 3:
       // 充電接続する
-      if (_chargeLoop(_catchCntTarget, _retryCntTarget))
-      {
+      if (_chargeLoop(_catchCntTarget, _retryCntTarget)) {
         _startChargeStep++;
       }
       break;
@@ -265,12 +235,11 @@ bool ChargeController::_startChargeLoop(void)
 
 /**
  * @brief 充電開始処理中かどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
-bool ChargeController::isStartChargeExecuting(void)
-{
+bool ChargeController::isStartChargeExecuting(void) {
   return _startChargeStep != 0;
 }
 
@@ -278,10 +247,7 @@ bool ChargeController::isStartChargeExecuting(void)
  * @brief 充電を停止する
  *
  */
-void ChargeController::stopCharge(void)
-{
-  _stopChargeStep = 1;
-}
+void ChargeController::stopCharge(void) { _stopChargeStep = 1; }
 
 /**
  * @brief 充電を停止するループ処理
@@ -289,10 +255,8 @@ void ChargeController::stopCharge(void)
  * @return true 処理完了
  * @return false 処理中
  */
-bool ChargeController::_stopChargeLoop(void)
-{
-  switch (_stopChargeStep)
-  {
+bool ChargeController::_stopChargeLoop(void) {
+  switch (_stopChargeStep) {
     case 0:
       // 何もしない
       break;
@@ -303,8 +267,7 @@ bool ChargeController::_stopChargeLoop(void)
       break;
     case 2:
       // アームを初期位置に戻す
-      if (_initLoop())
-      {
+      if (_initLoop()) {
         _stopChargeStep++;
       }
       break;
@@ -318,12 +281,11 @@ bool ChargeController::_stopChargeLoop(void)
 
 /**
  * @brief 充電終了処理中かどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
-bool ChargeController::isStopChargeExecuting(void)
-{
+bool ChargeController::isStopChargeExecuting(void) {
   return _stopChargeStep != 0;
 }
 
@@ -331,10 +293,7 @@ bool ChargeController::isStopChargeExecuting(void)
  * @brief ドローンの電源をONにする
  *
  */
-void ChargeController::powerOnDrone(void)
-{
-  _powerOnDroneStep = 1;
-}
+void ChargeController::powerOnDrone(void) { _powerOnDroneStep = 1; }
 
 /**
  * @brief ドローンの電源をONするループ処理
@@ -342,10 +301,8 @@ void ChargeController::powerOnDrone(void)
  * @return true 処理完了
  * @return false 処理中
  */
-bool ChargeController::_powerOnDroneLoop(void)
-{
-  switch (_powerOnDroneStep)
-  {
+bool ChargeController::_powerOnDroneLoop(void) {
+  switch (_powerOnDroneStep) {
     case 0:
       // 何もしない
       break;
@@ -356,32 +313,28 @@ bool ChargeController::_powerOnDroneLoop(void)
       break;
     case 2:
       // アームを初期位置に戻す
-      if (_initLoop())
-      {
+      if (_initLoop()) {
         _chargeStep = 1;
         _powerOnDroneStep++;
       }
       break;
     case 3:
       // 充電接続する
-      if (_chargeLoop())
-      {
+      if (_chargeLoop()) {
         _powerOnDroneTimer.startTimer();
         _powerOnDroneStep++;
       }
       break;
     case 4:
       // 1秒後に充電を終了する
-      if (_powerOnDroneTimer.getTime() >= POWER_ON_WAIT)
-      {
+      if (_powerOnDroneTimer.getTime() >= POWER_ON_WAIT) {
         _initStep = 1;
         _powerOnDroneStep++;
       }
       break;
     case 5:
       // アームを初期位置に戻す
-      if (_initLoop())
-      {
+      if (_initLoop()) {
         _powerOnDroneStep++;
       }
       break;
@@ -394,12 +347,11 @@ bool ChargeController::_powerOnDroneLoop(void)
 
 /**
  * @brief ドローンの起動処理中かどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
-bool ChargeController::isPowerOnExecuting(void)
-{
+bool ChargeController::isPowerOnExecuting(void) {
   return _powerOnDroneStep != 0;
 }
 
@@ -408,10 +360,7 @@ bool ChargeController::isPowerOnExecuting(void)
  *
  * @param input キーボード入力
  */
-void ChargeController::wasdControl(char input)
-{
-  _servo.wasdControl(input);
-}
+void ChargeController::wasdControl(char input) { _servo.wasdControl(input); }
 
 /**
  * @brief 充電中かどうか
@@ -419,8 +368,7 @@ void ChargeController::wasdControl(char input)
  * @return true 充電中
  * @return false 充電中でない
  */
-bool ChargeController::isCharging(void)
-{
+bool ChargeController::isCharging(void) {
   return _servo.isCatchDrone() && _servo.isConnectUsb() && _fet.read();
 }
 
@@ -430,8 +378,7 @@ bool ChargeController::isCharging(void)
  * @return true 初期位置
  * @return false 初期位置でない
  */
-bool ChargeController::isInitPos(void)
-{
+bool ChargeController::isInitPos(void) {
   return _servo.isReleaseDrone() && _servo.isDisconnectUsb() && !_fet.read();
 }
 
@@ -440,8 +387,7 @@ bool ChargeController::isInitPos(void)
  *
  * @return uint32_t 充電時間[ms]
  */
-uint32_t ChargeController::getChargeTimeMillis(void)
-{
+uint32_t ChargeController::getChargeTimeMillis(void) {
   return _chargeTimer.getTime();
 }
 
@@ -449,18 +395,14 @@ uint32_t ChargeController::getChargeTimeMillis(void)
  * @brief ループ処理
  *
  */
-void ChargeController::loop(void)
-{
-  if (_startChargeLoop())
-  {
+void ChargeController::loop(void) {
+  if (_startChargeLoop()) {
     logger.info("Finish to start charge");
   }
-  if (_stopChargeLoop())
-  {
+  if (_stopChargeLoop()) {
     logger.info("Finish to stop charge");
   }
-  if (_powerOnDroneLoop())
-  {
+  if (_powerOnDroneLoop()) {
     logger.info("Finish to power on Tello");
   }
   _servo.loop();
@@ -471,7 +413,4 @@ void ChargeController::loop(void)
  *
  * @return String サーボ角度の文字列
  */
-String ChargeController::toString(void)
-{
-  return _servo.toString();
-}
+String ChargeController::toString(void) { return _servo.toString(); }

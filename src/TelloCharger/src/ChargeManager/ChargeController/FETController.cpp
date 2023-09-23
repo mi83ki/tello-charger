@@ -11,14 +11,12 @@
 
 #include "Log.h"
 
-
 /**
  * @brief Construct a new FETController::FETController object
  *
  * @param pin ピン番号
  */
-FETController::FETController(uint8_t pin) : _pin(pin)
-{
+FETController::FETController(uint8_t pin) : _pin(pin) {
   pinMode(_pin, OUTPUT);
   off();
 }
@@ -33,8 +31,7 @@ FETController::~FETController() {}
  * @brief FETをONにする
  *
  */
-void FETController::on(void)
-{
+void FETController::on(void) {
   digitalWrite(_pin, 1);
   logger.info("FETController::on()");
 }
@@ -43,8 +40,7 @@ void FETController::on(void)
  * @brief FETをOFFにする
  *
  */
-void FETController::off(void)
-{
+void FETController::off(void) {
   digitalWrite(_pin, 0);
   logger.info("FETController::off()");
 }
@@ -55,7 +51,4 @@ void FETController::off(void)
  * @return true ON
  * @return false OFF
  */
-bool FETController::read(void)
-{
-  return digitalRead(_pin) != 0;
-}
+bool FETController::read(void) { return digitalRead(_pin) != 0; }
