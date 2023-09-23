@@ -14,6 +14,11 @@
 #include "ChargeController/ChargeController.h"
 #include "ChargeManager/CurrentReader.h"
 
+// この電流[mA]より大きければ充電中
+#define CHARGE_CURRENT_CHARGING_THREASHOLD (315.0)
+// この電流[mA]より小さくなると充電を終了する
+#define CHARGE_CURRENT_STOP_THREASHOLD (400.0)
+
 class ChargeManager {
  public:
   ChargeManager();
@@ -29,10 +34,12 @@ class ChargeManager {
   bool isPowerOnExecuting(void);
   uint32_t getChargeTimeMillis(void);
   float getCurrent(void);
+  bool isChargingCurrent(void);
+  bool isFullCharge(void);
   void loop(void);
   String toString(void);
 
  private:
   ChargeController _controller;
-  CurrentReader _ina;
+  CurrentReader _current;
 };

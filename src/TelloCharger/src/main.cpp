@@ -1,5 +1,4 @@
 #include <Arduino.h>
-
 #include <Log.h>
 #include <M5Atom.h>
 #include <WiFiESP32.h>
@@ -22,15 +21,14 @@ HttpServer *server;
 /** 充電制御インスタンス */
 ChargeManager *charger;
 
-void setup()
-{
+void setup() {
+  M5.begin();
   charger = new ChargeManager();
   wifi = new WiFiESP32(wifiSSID, wifiPassword);
   server = new HttpServer(httpPort, charger);
 }
 
-void loop()
-{
+void loop() {
   // WebAPIサーバー接続監視
   if (wifi->healthCheck())
     server->begin();
@@ -39,8 +37,7 @@ void loop()
 
   // ボタン押下時の処理
   M5.update();
-  if (M5.Btn.wasPressed())
-  {
+  if (M5.Btn.wasPressed()) {
     if (charger->isCharging())
       charger->stopCharge();
     else
@@ -48,8 +45,7 @@ void loop()
   }
 
   // キーボードからのWASD入力時の処理
-  if (Serial.available())
-  {
+  if (Serial.available()) {
     // 文字が届いていればを読み込む
     char input = Serial.read();
     charger->wasdControl(input);

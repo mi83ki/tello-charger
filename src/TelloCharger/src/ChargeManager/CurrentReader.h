@@ -8,14 +8,22 @@
 
 #pragma once
 
+#include <Timer.h>
+#include <Filter.h>
+
 class CurrentReader {
  public:
-  CurrentReader();
+  CurrentReader(uint32_t);
   ~CurrentReader();
   bool isConnect(void);
   float getCurrent(void);
   void readIna219(void);
+  void loop(void);
 
  private:
+  float _getCurrent(void);
   bool _isConnect;
+  Timer _timer;
+  float _current;
+  MovAveFilter _movAveFilter;
 };

@@ -16,7 +16,7 @@
  *
  */
 ChargeManager::ChargeManager()
-    : _controller(ChargeController()), _ina(CurrentReader()) {}
+    : _controller(ChargeController()), _current(CurrentReader(500)) {}
 
 /**
  * @brief Destroy the Servo Controller:: Servo Controller object
@@ -55,7 +55,9 @@ void ChargeManager::wasdControl(char input) { _controller.wasdControl(input); }
  * @return true 充電中
  * @return false 充電中でない
  */
-bool ChargeManager::isCharging(void) { return _controller.isCharging(); }
+bool ChargeManager::isCharging(void) {
+  return _controller.isCharging() && isChargingCurrent();
+}
 
 /**
  * @brief 初期位置かどうか
@@ -109,13 +111,49 @@ uint32_t ChargeManager::getChargeTimeMillis(void) {
  *
  * @return float 電流値[mA]
  */
-float ChargeManager::getCurrent(void) { return _ina.getCurrent(); }
+float ChargeManager::getCurrent(void) { return _current.getCurrent(); }
+
+/**
+ * @brief 充電中の電流かどうか
+ *
+ * @return true 充電中である
+ * @return false
+ */
+bool ChargeManager::isChargingCurrent(void) {
+  return getCurrent() >= CHARGE_CURRENT_CHARGING_THREASHOLD;
+}
+
+/**
+ * @brief 満充電かどうか
+ *
+ * @return true 満充電である
+ * @return false
+ */
+bool ChargeManager::isFullCharge(void) {
+  return _controller.isCharging() && isChargingCurrent() &&
+         getCurrent() < CHARGE_CURRENT_STOP_THREASHOLD &&
+         _controller.getChargeTimeMillis() > 30000;
+}
 
 /**
  * @brief ループ処理
  *
  */
-void ChargeManager::loop(void) { _controller.loop(); }
+void ChargeManager::loop(void) {
+  static bool requestedStopCharge = false;
+  _current.loop();
+  if (!requestedStopCharge && isFullCharge()) {
+    // 満充電になったら止める
+    logger.info(
+        "ChargeManager.loop(): Stop charging due to full charge. current = " +
+        String(_current.getCurrent()));
+    _controller.stopCharge();
+    requestedStopCharge = true;
+  } else if (requestedStopCharge && !isFullCharge()) {
+    requestedStopCharge = false;
+  }
+  _controller.loop();
+}
 
 /**
  * @brief サーボ角度の文字列を取得する

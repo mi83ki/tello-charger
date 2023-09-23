@@ -9,8 +9,7 @@
 #include "CurrentReader.h"
 
 #include <Adafruit_INA219.h>
-
-#include "Log.h"
+#include <Log.h>
 
 Adafruit_INA219 ina219;
 
@@ -18,12 +17,17 @@ Adafruit_INA219 ina219;
  * @brief Constdsruct a new CurrentReader::CurrentReader object
  *
  */
-CurrentReader::CurrentReader() : _isConnect(false) {
+CurrentReader::CurrentReader(uint32_t cycleTime)
+    : _isConnect(false),
+      _timer(Timer(cycleTime)),
+      _current(0.0),
+      _movAveFilter(MovAveFilter(10, 0)) {
   Wire1.begin(26, 32);
   if (!ina219.begin()) {
     logger.error("CurrentReader(): Failed to find INA219 chip");
   } else {
     _isConnect = true;
+    _movAveFilter.setData(FLOAT_TO_FIX(_getCurrent()));
   }
 }
 
@@ -46,11 +50,31 @@ bool CurrentReader::isConnect(void) { return _isConnect; }
  *
  * @return float 電流値[mA]
  */
-float CurrentReader::getCurrent(void) {
+float CurrentReader::_getCurrent(void) {
   if (isConnect()) {
     return ina219.getCurrent_mA();
   }
   return 0.0;
+}
+
+/**
+ * @brief 電流値を取得する
+ *
+ * @return float 電流値[mA]
+ */
+float CurrentReader::getCurrent(void) { return _current; }
+
+/**
+ * @brief ループ処理
+ *
+ */
+void CurrentReader::loop() {
+  if (_timer.isCycleTime()) {
+    float current = _getCurrent();
+    _current =
+        FIX_TO_FLOAT(_movAveFilter.movingAverage(FLOAT_TO_FIX(current)));
+    logger.info(String(current) + ", " + String(_current));
+  }
 }
 
 /**
