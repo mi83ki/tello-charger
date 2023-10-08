@@ -143,7 +143,7 @@ bool ChargeManager::isFullCharge(void) {
  */
 bool ChargeManager::haveToRelease(void) {
   return _controller.isCharging() && !isChargingCurrent() &&
-         _controller.getChargeTimeMillis() > 15000;
+         _controller.getChargeTimeMillis() > 60000;
 }
 
 /**

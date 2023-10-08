@@ -15,9 +15,9 @@
 #include "ChargeManager/CurrentReader.h"
 
 // この電流[mA]より大きければ充電中
-#define CHARGE_CURRENT_CHARGING_THREASHOLD (315.0)
+#define CHARGE_CURRENT_CHARGING_THREASHOLD (100.0)
 // この電流[mA]より小さくなると充電を終了する
-#define CHARGE_CURRENT_STOP_THREASHOLD (400.0)
+#define CHARGE_CURRENT_STOP_THREASHOLD (200.0)
 
 class ChargeManager {
  public:
