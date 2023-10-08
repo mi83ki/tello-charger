@@ -24,6 +24,11 @@ ChargeManager *charger;
 void setup() {
   M5.begin();
   charger = new ChargeManager();
+  IPAddress ip(192, 168, 12, 12);      // for fixed IP Address
+  IPAddress gateway(192, 168, 12, 1);  //
+  IPAddress subnet(255, 255, 255, 0);  //
+  IPAddress DNS(192, 168, 12, 90);     //
+  WiFi.config(ip, gateway, subnet);
   wifi = new WiFiESP32(wifiSSID, wifiPassword);
   server = new HttpServer(httpPort, charger);
 }
