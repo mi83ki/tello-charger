@@ -56,7 +56,7 @@ void ChargeManager::wasdControl(char input) { _controller.wasdControl(input); }
  * @return false 充電中でない
  */
 bool ChargeManager::isCharging(void) {
-  return _controller.isCharging() && isChargingCurrent();
+  return _controller.isCharging()/* && isChargingCurrent() */;
 }
 
 /**
@@ -136,6 +136,17 @@ bool ChargeManager::isFullCharge(void) {
 }
 
 /**
+ * @brief アームをリリースすべきかどうか
+ *
+ * @return true
+ * @return false
+ */
+bool ChargeManager::haveToRelease(void) {
+  return _controller.isCharging() && !isChargingCurrent() &&
+         _controller.getChargeTimeMillis() > 15000;
+}
+
+/**
  * @brief ループ処理
  *
  */
@@ -146,6 +157,13 @@ void ChargeManager::loop(void) {
     // 満充電になったら止める
     logger.info(
         "ChargeManager.loop(): Stop charging due to full charge. current = " +
+        String(_current.getCurrent()));
+    _controller.stopCharge();
+    requestedStopCharge = true;
+  } else if (!requestedStopCharge && haveToRelease()) {
+    // 充電開始したが電流が流れなかった場合
+    logger.info(
+        "ChargeManager.loop(): Stop charging due to no current. current = " +
         String(_current.getCurrent()));
     _controller.stopCharge();
     requestedStopCharge = true;

@@ -36,6 +36,7 @@ class ChargeManager {
   float getCurrent(void);
   bool isChargingCurrent(void);
   bool isFullCharge(void);
+  bool haveToRelease(void);
   void loop(void);
   String toString(void);
 
