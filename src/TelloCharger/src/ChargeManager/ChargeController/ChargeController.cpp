@@ -392,6 +392,56 @@ uint32_t ChargeController::getChargeTimeMillis(void) {
 }
 
 /**
+ * @brief ドローンをキャッチしているかどうか
+ *
+ * @return true
+ * @return false
+ */
+bool ChargeController::isCatchDrone(void) {
+  return _servo.isCatchDrone();
+}
+
+/**
+ * @brief ドローンをリリースしているかどうか
+ *
+ * @return true
+ * @return false
+ */
+bool ChargeController::isReleaseDrone(void) {
+  return _servo.isReleaseDrone();
+}
+
+/**
+ * @brief USBを接続しているかどうか
+ *
+ * @return true
+ * @return false
+ */
+bool ChargeController::isConnectUsb(void) {
+  return _servo.isConnectUsb();
+}
+
+/**
+ * @brief USBを切断しているかどうか
+ *
+ * @return true
+ * @return false
+ */
+bool ChargeController::isDisconnectUsb(void) {
+  return _servo.isDisconnectUsb();
+}
+
+/**
+ * @brief サーボモータの指示値が目標角度に到達したかどうか
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ChargeController::isTargetAngle(void) {
+  return _servo.isTargetAngle();
+}
+
+/**
  * @brief ループ処理
  *
  */

@@ -28,6 +28,11 @@ class ChargeController {
   void wasdControl(char);
   bool isCharging(void);
   bool isInitPos(void);
+  bool isCatchDrone(void);
+  bool isReleaseDrone(void);
+  bool isConnectUsb(void);
+  bool isDisconnectUsb(void);
+  bool isTargetAngle(void);
   uint32_t getChargeTimeMillis(void);
   void loop(void);
   String toString(void);

@@ -16,7 +16,11 @@
  *
  */
 ChargeManager::ChargeManager()
-    : _controller(ChargeController()), _current(CurrentReader(500)) {}
+    : _controller(ChargeController()),
+      _current(CurrentReader(500)),
+      _isServoMovingPrevious(false),
+      _checkServoStep(0),
+      _checkServoTimer(Timer()) {}
 
 /**
  * @brief Destroy the Servo Controller:: Servo Controller object
@@ -56,7 +60,7 @@ void ChargeManager::wasdControl(char input) { _controller.wasdControl(input); }
  * @return false 充電中でない
  */
 bool ChargeManager::isCharging(void) {
-  return _controller.isCharging()/* && isChargingCurrent() */;
+  return _controller.isCharging() /* && isChargingCurrent() */;
 }
 
 /**
@@ -147,6 +151,59 @@ bool ChargeManager::haveToRelease(void) {
 }
 
 /**
+ * @brief サーボモータが稼働中かどうか
+ *
+ * @return true
+ * @return false
+ */
+bool ChargeManager::isServoMoving(void) {
+  return !_controller.isCharging() &&
+         getCurrent() >= SERVO_CURRENT_MOVING_THREASHOLD;
+}
+
+/**
+ * @brief サーボモータが過電流タイムアウトしたかどうか
+ *
+ */
+bool ChargeManager::checkServoTimeout(void) {
+  bool ret = false;
+  static Timer timer = Timer(500);
+  if (timer.isCycleTime()) {
+    logger.debug("checkServoTimeout(): current = " + String(getCurrent()) +
+                 ", isMoving = " + String(isServoMoving()));
+  }
+  switch (_checkServoStep) {
+    case 0:
+      if (_controller.isTargetAngle() && isServoMoving()) {
+        // サーボ指示値が収束した状態で過電流を検知した
+        _checkServoTimer.startTimer();
+        _checkServoStep++;
+        logger.debug("checkServoTimeout(): start timer");
+      }
+      break;
+    case 1:
+      if (_checkServoTimer.getTime() >= SERVO_MOVING_TIMEOUT) {
+        // 過電流がタイムアウトした場合
+        logger.error("checkServoTimeout(): servo moving timeout. time = " +
+                     String(_checkServoTimer.getTime()) +
+                     ", current = " + String(getCurrent()));
+        ret = true;
+      } else if (!_controller.isTargetAngle() || !isServoMoving()) {
+        // サーボの稼働が終了した
+        logger.debug("checkServoTimeout(): finish servo moving. time = " +
+                     String(_checkServoTimer.getTime()) +
+                     ", current = " + String(getCurrent()));
+        _checkServoStep = 0;
+      }
+      break;
+    default:
+      _checkServoStep = 0;
+      break;
+  }
+  return ret;
+}
+
+/**
  * @brief ループ処理
  *
  */
@@ -170,6 +227,15 @@ void ChargeManager::loop(void) {
   } else if (requestedStopCharge && !isFullCharge()) {
     requestedStopCharge = false;
   }
+
+  if (checkServoTimeout()) {
+    if (_controller.isCatchDrone()) {
+      stopCharge();
+    } else if (_controller.isReleaseDrone()) {
+      startCharge();
+    }
+  }
+
   _controller.loop();
 }
 

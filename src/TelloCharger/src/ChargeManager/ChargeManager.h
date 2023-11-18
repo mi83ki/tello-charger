@@ -18,6 +18,10 @@
 #define CHARGE_CURRENT_CHARGING_THREASHOLD (100.0)
 // この電流[mA]より小さくなると充電を終了する
 #define CHARGE_CURRENT_STOP_THREASHOLD (200.0)
+// この電流[mA]より大きければサーボモータ稼働中
+#define SERVO_CURRENT_MOVING_THREASHOLD (150.0)
+// 以下の時間過電流を検知すればサーボを止める
+#define SERVO_MOVING_TIMEOUT (3000)
 
 class ChargeManager {
  public:
@@ -37,10 +41,15 @@ class ChargeManager {
   bool isChargingCurrent(void);
   bool isFullCharge(void);
   bool haveToRelease(void);
+  bool isServoMoving(void);
+  bool checkServoTimeout(void);
   void loop(void);
   String toString(void);
 
  private:
   ChargeController _controller;
   CurrentReader _current;
+  bool _isServoMovingPrevious;
+  uint8_t _checkServoStep;
+  Timer _checkServoTimer;
 };

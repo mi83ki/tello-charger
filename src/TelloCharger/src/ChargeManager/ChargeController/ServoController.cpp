@@ -157,6 +157,16 @@ bool ServoController::isDisconnectUsb(void) {
 }
 
 /**
+ * @brief サーボモータの指示値が目標角度に到達したかどうか
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ServoController::isTargetAngle(void) {
+  return _servoCatch.isTargetAngle() && _servoUsb.isTargetAngle();
+}
+
+/**
  * @brief WASDでサーボの角度を微調整する
  *
  * @param input キーボード入力

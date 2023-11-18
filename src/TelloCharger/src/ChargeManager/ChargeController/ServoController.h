@@ -30,6 +30,7 @@ class ServoController {
   bool isReleaseDrone(void);
   bool isConnectUsb(void);
   bool isDisconnectUsb(void);
+  bool isTargetAngle(void);
   void wasdControl(char);
   void loop(void);
   String toString(void);
