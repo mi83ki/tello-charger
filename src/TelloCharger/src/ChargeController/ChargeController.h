@@ -42,6 +42,7 @@ class ChargeController {
   bool haveToRelease(void);
 
   bool isServoMoving(void);
+  bool isServoOverCurrent(void);
   bool checkServoTimeout(void);
 
   void loop(void);

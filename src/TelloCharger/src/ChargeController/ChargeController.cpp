@@ -92,6 +92,11 @@ bool ChargeController::_initLoop() {
         _initStep++;
       break;
     case 3:
+      if (!isServoOverCurrent()) {
+        _initStep++;
+      } else {
+      }
+    case 4:
       // 捕獲アームが捕獲中の場合は戻す
       if (_servo.isCatchDrone())
         _servo.releaseDrone();
@@ -482,8 +487,7 @@ bool ChargeController::isFullCharge(void) {
  * @return false
  */
 bool ChargeController::haveToRelease(void) {
-  return isCharging() && !isChargingCurrent() &&
-         getChargeTimeMillis() > 60000;
+  return isCharging() && !isChargingCurrent() && getChargeTimeMillis() > 60000;
 }
 
 /**
@@ -493,7 +497,17 @@ bool ChargeController::haveToRelease(void) {
  * @return false
  */
 bool ChargeController::isServoMoving(void) {
-  return !isCharging() &&
+  return !isCharging() && getCurrent() >= SERVO_CURRENT_MOVING_THREASHOLD;
+}
+
+/**
+ * @brief サーボモータが過電流かどうか
+ *
+ * @return true
+ * @return false
+ */
+bool ChargeController::isServoOverCurrent(void) {
+  return !_fet.read() && isTargetAngle() &&
          getCurrent() >= SERVO_CURRENT_MOVING_THREASHOLD;
 }
 
@@ -549,7 +563,8 @@ void ChargeController::loop(void) {
   if (!requestedStopCharge && isFullCharge()) {
     // 満充電になったら止める
     logger.info(
-        "ChargeController.loop(): Stop charging due to full charge. current = " +
+        "ChargeController.loop(): Stop charging due to full charge. current "
+        "= " +
         String(_current.getCurrent()));
     stopCharge();
     requestedStopCharge = true;
