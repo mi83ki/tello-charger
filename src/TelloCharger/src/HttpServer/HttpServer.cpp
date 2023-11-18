@@ -9,14 +9,14 @@
 
 #include "HttpServer.h"
 
-ChargeManager *HttpServer::_charger = nullptr;
+ChargeController *HttpServer::_charger = nullptr;
 
 /**
  * @brief Construct a new Http Server:: Http Server object
  *
  * @param httpPort 待ち受けポート番号
  */
-HttpServer::HttpServer(uint16_t httpPort, ChargeManager *charger)
+HttpServer::HttpServer(uint16_t httpPort, ChargeController *charger)
     : _server(AsyncWebServer(httpPort)), _bAvailable(false) {
   _charger = charger;
   _defineApi();

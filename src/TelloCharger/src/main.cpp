@@ -3,7 +3,7 @@
 #include <M5Atom.h>
 #include <WiFiESP32.h>
 
-#include "ChargeManager/ChargeManager.h"
+#include "ChargeController/ChargeController.h"
 #include "HttpServer/HttpServer.h"
 #include "ssid.h"
 
@@ -19,16 +19,16 @@ WiFiESP32 *wifi;
 /** WebAPIインスタンス */
 HttpServer *server;
 /** 充電制御インスタンス */
-ChargeManager *charger;
+ChargeController *charger;
 
 void setup() {
   M5.begin();
-  charger = new ChargeManager();
   IPAddress ip(192, 168, 12, 12);      // for fixed IP Address
   IPAddress gateway(192, 168, 12, 1);  //
   IPAddress subnet(255, 255, 255, 0);  //
   IPAddress DNS(192, 168, 12, 90);     //
   WiFi.config(ip, gateway, subnet);
+  charger = new ChargeController();
   wifi = new WiFiESP32(wifiSSID, wifiPassword);
   server = new HttpServer(httpPort, charger);
 }

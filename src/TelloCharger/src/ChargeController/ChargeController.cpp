@@ -24,6 +24,15 @@ const uint8_t ChargeController::RETRY_CNT = 1;
 /** 電源ON時に接続したアームを離すまでの時間[ms] */
 const uint16_t ChargeController::POWER_ON_WAIT = 2000;
 
+// この電流[mA]より大きければ充電中
+const float ChargeController::CHARGE_CURRENT_CHARGING_THREASHOLD = 100.0;
+// この電流[mA]より小さくなると充電を終了する
+const float ChargeController::CHARGE_CURRENT_STOP_THREASHOLD = 200.0;
+// この電流[mA]より大きければサーボモータ稼働中
+const float ChargeController::SERVO_CURRENT_MOVING_THREASHOLD = 150.0;
+// 以下の時間過電流を検知すればサーボを止める
+const uint32_t ChargeController::SERVO_MOVING_TIMEOUT = 3000;
+
 /**
  * @brief Construct a new Servo Controller:: Servo Controller object
  *
@@ -31,6 +40,7 @@ const uint16_t ChargeController::POWER_ON_WAIT = 2000;
 ChargeController::ChargeController()
     : _servo(ServoController(SERVO_CATCH_PIN, SERVO_USB_PIN)),
       _fet(FETController(CHARGE_CONTROL_PIN)),
+      _current(CurrentReader(500)),
       _initStep(0),
       _chargeStep(0),
       _startChargeStep(0),
@@ -41,7 +51,10 @@ ChargeController::ChargeController()
       _catchCntTarget(1),
       _retryCnt(0),
       _retryCntTarget(0),
-      _chargeTimer(Timer()) {}
+      _chargeTimer(Timer()),
+      _isServoMovingPrevious(false),
+      _checkServoStep(0),
+      _checkServoTimer(Timer()) {}
 
 /**
  * @brief Destroy the Servo Controller:: Servo Controller object
@@ -397,9 +410,7 @@ uint32_t ChargeController::getChargeTimeMillis(void) {
  * @return true
  * @return false
  */
-bool ChargeController::isCatchDrone(void) {
-  return _servo.isCatchDrone();
-}
+bool ChargeController::isCatchDrone(void) { return _servo.isCatchDrone(); }
 
 /**
  * @brief ドローンをリリースしているかどうか
@@ -407,9 +418,7 @@ bool ChargeController::isCatchDrone(void) {
  * @return true
  * @return false
  */
-bool ChargeController::isReleaseDrone(void) {
-  return _servo.isReleaseDrone();
-}
+bool ChargeController::isReleaseDrone(void) { return _servo.isReleaseDrone(); }
 
 /**
  * @brief USBを接続しているかどうか
@@ -417,9 +426,7 @@ bool ChargeController::isReleaseDrone(void) {
  * @return true
  * @return false
  */
-bool ChargeController::isConnectUsb(void) {
-  return _servo.isConnectUsb();
-}
+bool ChargeController::isConnectUsb(void) { return _servo.isConnectUsb(); }
 
 /**
  * @brief USBを切断しているかどうか
@@ -433,12 +440,103 @@ bool ChargeController::isDisconnectUsb(void) {
 
 /**
  * @brief サーボモータの指示値が目標角度に到達したかどうか
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
-bool ChargeController::isTargetAngle(void) {
-  return _servo.isTargetAngle();
+bool ChargeController::isTargetAngle(void) { return _servo.isTargetAngle(); }
+
+/**
+ * @brief 電流値を取得する
+ *
+ * @return float 電流値[mA]
+ */
+float ChargeController::getCurrent(void) { return _current.getCurrent(); }
+
+/**
+ * @brief 充電中の電流かどうか
+ *
+ * @return true 充電中である
+ * @return false
+ */
+bool ChargeController::isChargingCurrent(void) {
+  return getCurrent() >= CHARGE_CURRENT_CHARGING_THREASHOLD;
+}
+
+/**
+ * @brief 満充電かどうか
+ *
+ * @return true 満充電である
+ * @return false
+ */
+bool ChargeController::isFullCharge(void) {
+  return isCharging() && isChargingCurrent() &&
+         getCurrent() < CHARGE_CURRENT_STOP_THREASHOLD &&
+         getChargeTimeMillis() > 30000;
+}
+
+/**
+ * @brief アームをリリースすべきかどうか
+ *
+ * @return true
+ * @return false
+ */
+bool ChargeController::haveToRelease(void) {
+  return isCharging() && !isChargingCurrent() &&
+         getChargeTimeMillis() > 60000;
+}
+
+/**
+ * @brief サーボモータが稼働中かどうか
+ *
+ * @return true
+ * @return false
+ */
+bool ChargeController::isServoMoving(void) {
+  return !isCharging() &&
+         getCurrent() >= SERVO_CURRENT_MOVING_THREASHOLD;
+}
+
+/**
+ * @brief サーボモータが過電流タイムアウトしたかどうか
+ *
+ */
+bool ChargeController::checkServoTimeout(void) {
+  bool ret = false;
+  static Timer timer = Timer(500);
+  if (timer.isCycleTime()) {
+    logger.debug("checkServoTimeout(): current = " + String(getCurrent()) +
+                 ", isMoving = " + String(isServoMoving()));
+  }
+  switch (_checkServoStep) {
+    case 0:
+      if (isTargetAngle() && isServoMoving()) {
+        // サーボ指示値が収束した状態で過電流を検知した
+        _checkServoTimer.startTimer();
+        _checkServoStep++;
+        logger.debug("checkServoTimeout(): start timer");
+      }
+      break;
+    case 1:
+      if (_checkServoTimer.getTime() >= SERVO_MOVING_TIMEOUT) {
+        // 過電流がタイムアウトした場合
+        logger.error("checkServoTimeout(): servo moving timeout. time = " +
+                     String(_checkServoTimer.getTime()) +
+                     ", current = " + String(getCurrent()));
+        ret = true;
+      } else if (!isTargetAngle() || !isServoMoving()) {
+        // サーボの稼働が終了した
+        logger.debug("checkServoTimeout(): finish servo moving. time = " +
+                     String(_checkServoTimer.getTime()) +
+                     ", current = " + String(getCurrent()));
+        _checkServoStep = 0;
+      }
+      break;
+    default:
+      _checkServoStep = 0;
+      break;
+  }
+  return ret;
 }
 
 /**
@@ -446,6 +544,34 @@ bool ChargeController::isTargetAngle(void) {
  *
  */
 void ChargeController::loop(void) {
+  static bool requestedStopCharge = false;
+  _current.loop();
+  if (!requestedStopCharge && isFullCharge()) {
+    // 満充電になったら止める
+    logger.info(
+        "ChargeController.loop(): Stop charging due to full charge. current = " +
+        String(_current.getCurrent()));
+    stopCharge();
+    requestedStopCharge = true;
+  } else if (!requestedStopCharge && haveToRelease()) {
+    // 充電開始したが電流が流れなかった場合
+    logger.info(
+        "ChargeController.loop(): Stop charging due to no current. current = " +
+        String(_current.getCurrent()));
+    stopCharge();
+    requestedStopCharge = true;
+  } else if (requestedStopCharge && !isFullCharge()) {
+    requestedStopCharge = false;
+  }
+
+  if (checkServoTimeout()) {
+    if (isCatchDrone()) {
+      stopCharge();
+    } else if (isReleaseDrone()) {
+      startCharge();
+    }
+  }
+
   if (_startChargeLoop()) {
     logger.info("Finish to start charge");
   }

@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <Timer.h>
 
+#include "CurrentReader.h"
 #include "FETController.h"
 #include "ServoController.h"
 
@@ -34,6 +35,15 @@ class ChargeController {
   bool isDisconnectUsb(void);
   bool isTargetAngle(void);
   uint32_t getChargeTimeMillis(void);
+
+  float getCurrent(void);
+  bool isChargingCurrent(void);
+  bool isFullCharge(void);
+  bool haveToRelease(void);
+
+  bool isServoMoving(void);
+  bool checkServoTimeout(void);
+
   void loop(void);
   String toString(void);
 
@@ -55,6 +65,8 @@ class ChargeController {
   ServoController _servo;
   /** MOSFET制御部 */
   FETController _fet;
+  /** 電流計測部 */
+  CurrentReader _current;
   /** 初期位置に戻す処理のステップ */
   uint8_t _initStep;
   /** 充電接続する処理のステップ */
@@ -77,6 +89,10 @@ class ChargeController {
   uint8_t _retryCntTarget;
   /** 充電時間計測タイマー */
   Timer _chargeTimer;
+  /** サーボモータの過電流対策 */
+  bool _isServoMovingPrevious;
+  uint8_t _checkServoStep;
+  Timer _checkServoTimer;
 
   static const uint8_t SERVO_CATCH_PIN;
   static const uint8_t SERVO_USB_PIN;
@@ -84,4 +100,8 @@ class ChargeController {
   static const uint8_t CATCH_CNT;
   static const uint8_t RETRY_CNT;
   static const uint16_t POWER_ON_WAIT;
+  static const float CHARGE_CURRENT_CHARGING_THREASHOLD;
+  static const float CHARGE_CURRENT_STOP_THREASHOLD;
+  static const float SERVO_CURRENT_MOVING_THREASHOLD;
+  static const uint32_t SERVO_MOVING_TIMEOUT;
 };
