@@ -11,14 +11,50 @@
 
 #include <Log.h>
 
+/** 充電開始時に何回捕獲するか */
+const uint8_t ControlStartCharge::CATCH_CNT = 2;
+/** 充電開始時に何回USB接続をリトライするか */
+const uint8_t ControlStartCharge::RETRY_CNT = 1;
+
+/**
+ * @brief Construct a new Control Start Charge:: Control Start Charge object
+ *
+ * @param servo
+ * @param fet
+ * @param current
+ * @param chargeTimer
+ */
 ControlStartCharge::ControlStartCharge(ServoController *servo,
                                        FETController *fet,
                                        CurrentReader *current,
                                        Timer *chargeTimer)
     : ControlBase(servo, fet, current, "ControlStartCharge"),
       _controlArmInit(ControlArmInit(servo, fet, current, chargeTimer)),
-      _controlArmCharge(
-          ControlArmCharge(servo, fet, current, chargeTimer)) {}
+      _controlArmCharge(ControlArmCharge(servo, fet, current, chargeTimer)),
+      _catchCntTarget(1),
+      _retryCntTarget(0) {}
+
+/**
+ * @brief 処理を開始する
+ *
+ */
+void ControlStartCharge::start(void) {
+  ControlBase::start();
+  _catchCntTarget = CATCH_CNT;
+  _retryCntTarget = RETRY_CNT;
+}
+
+/**
+ * @brief 充電を開始する
+ *
+ * @param catchCnt 捕獲繰り返し回数
+ * @param retryCnt USB接続するまでの動作をリトライする回数
+ */
+void ControlStartCharge::start(uint8_t catchCnt, uint8_t retryCnt) {
+  ControlBase::start();
+  _catchCntTarget = catchCnt;
+  _retryCntTarget = retryCnt;
+}
 
 /**
  * @brief 充電を開始するループ処理
@@ -39,7 +75,7 @@ bool ControlStartCharge::loop(void) {
     case 2:
       // アームを初期位置に戻す
       if (_controlArmInit.loop()) {
-        _controlArmCharge.start();
+        _controlArmCharge.start(_catchCntTarget, _retryCntTarget);
         _step++;
       }
       break;

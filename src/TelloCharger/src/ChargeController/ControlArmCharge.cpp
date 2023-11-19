@@ -11,24 +11,49 @@
 
 #include <Log.h>
 
+/** 充電開始時に何回捕獲するか */
+const uint8_t ControlArmCharge::CATCH_CNT = 2;
+/** 充電開始時に何回USB接続をリトライするか */
+const uint8_t ControlArmCharge::RETRY_CNT = 1;
+
 ControlArmCharge::ControlArmCharge(ServoController *servo, FETController *fet,
                                    CurrentReader *current, Timer *chargeTimer)
     : ControlBase(servo, fet, current, "ControlArmCharge"),
-      _chargeTimer(chargeTimer) {}
+      _chargeTimer(chargeTimer),
+      _catchCnt(0),
+      _catchCntTarget(1),
+      _retryCnt(0),
+      _retryCntTarget(0) {}
+
+/**
+ * @brief 処理を開始する
+ *
+ */
+void ControlArmCharge::start(void) {
+  ControlBase::start();
+  _catchCntTarget = CATCH_CNT;
+  _retryCntTarget = RETRY_CNT;
+}
+
+/**
+ * @brief 充電を開始する
+ *
+ * @param catchCnt 捕獲繰り返し回数
+ * @param retryCnt USB接続するまでの動作をリトライする回数
+ */
+void ControlArmCharge::start(uint8_t catchCnt, uint8_t retryCnt) {
+  ControlBase::start();
+  _catchCntTarget = catchCnt;
+  _retryCntTarget = retryCnt;
+}
 
 /**
  * @brief 充電接続するループ処理
  *
- * @param catchCnt 捕獲時に繰り返す回数
- * @param retryCnt USB接続するまでの動作をリトライする回数
  * @return true 処理完了
  * @return false 処理中
  */
 bool ControlArmCharge::loop(void) {
-  uint8_t catchCnt = 1;
-  uint8_t retryCnt = 0;
-  static uint8_t _catchCnt = 0;
-  static uint8_t _retryCnt = 0;
   switch (_step) {
     case 0:
       // 何もしない
@@ -41,14 +66,14 @@ bool ControlArmCharge::loop(void) {
     case 2:
       // 捕獲する
       if (_servo->isReleaseDrone()) {
-        if (catchCnt - _catchCnt <= 1) {
+        if (_catchCntTarget - _catchCnt <= 1) {
           _servo->catchDrone();
         } else {
           _servo->catchDroneOnce();
         }
         _catchCnt++;
       } else if (_servo->isCatchDrone()) {
-        if (_catchCnt >= catchCnt)
+        if (_catchCnt >= _catchCntTarget)
           // 指定した回数捕獲したら次に進む
           _step++;
         else
@@ -60,7 +85,7 @@ bool ControlArmCharge::loop(void) {
       if (_servo->isDisconnectUsb())
         _servo->connectUsb();
       else if (_servo->isConnectUsb()) {
-        if (_retryCnt < retryCnt) {
+        if (_retryCnt < _retryCntTarget) {
           _catchCnt = 0;
           _step = 5;
           _retryCnt++;

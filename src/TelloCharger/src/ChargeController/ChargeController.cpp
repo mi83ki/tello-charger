@@ -17,12 +17,6 @@ const uint8_t ChargeController::SERVO_CATCH_PIN = 19;
 const uint8_t ChargeController::SERVO_USB_PIN = 23;
 /** MOSFETのピン番号 */
 const uint8_t ChargeController::CHARGE_CONTROL_PIN = G22;
-/** 充電開始時に何回捕獲するか */
-const uint8_t ChargeController::CATCH_CNT = 2;
-/** 充電開始時に何回USB接続をリトライするか */
-const uint8_t ChargeController::RETRY_CNT = 1;
-/** 電源ON時に接続したアームを離すまでの時間[ms] */
-const uint16_t ChargeController::POWER_ON_WAIT = 2000;
 
 // この電流[mA]より大きければ充電中
 const float ChargeController::CHARGE_CURRENT_CHARGING_THREASHOLD = 100.0;
@@ -41,17 +35,13 @@ ChargeController::ChargeController()
     : _servo(ServoController(SERVO_CATCH_PIN, SERVO_USB_PIN)),
       _fet(FETController(CHARGE_CONTROL_PIN)),
       _current(CurrentReader(500)),
-      _controlArmInit(ControlArmInit(&_servo, &_fet, &_current, &_chargeTimer)),
-      _controlArmCharge(ControlArmCharge(&_servo, &_fet, &_current, &_chargeTimer)),
-      _controlStartCharge(ControlStartCharge(&_servo, &_fet, &_current, &_chargeTimer)),
-      _stopChargeStep(0),
-      _powerOnDroneStep(0),
-      _powerOnDroneTimer(Timer()),
-      _catchCnt(0),
-      _catchCntTarget(1),
-      _retryCnt(0),
-      _retryCntTarget(0),
       _chargeTimer(Timer()),
+      _controlStartCharge(
+          ControlStartCharge(&_servo, &_fet, &_current, &_chargeTimer)),
+      _controlStopCharge(
+          ControlStopCharge(&_servo, &_fet, &_current, &_chargeTimer)),
+      _controlPowerOnDrone(
+          ControlPowerOnDrone(&_servo, &_fet, &_current, &_chargeTimer)),
       _isServoMovingPrevious(false),
       _checkServoStep(0),
       _checkServoTimer(Timer()) {}
@@ -68,8 +58,6 @@ ChargeController::~ChargeController() {}
  */
 void ChargeController::startCharge(void) {
   _controlStartCharge.start();
-  _catchCntTarget = CATCH_CNT;
-  _retryCntTarget = RETRY_CNT;
 }
 
 /**
@@ -79,9 +67,7 @@ void ChargeController::startCharge(void) {
  * @param retryCnt USB接続するまでの動作をリトライする回数
  */
 void ChargeController::startCharge(uint8_t catchCnt, uint8_t retryCnt) {
-  _controlStartCharge.start();
-  _catchCntTarget = catchCnt;
-  _retryCntTarget = retryCnt;
+  _controlStartCharge.start(catchCnt, retryCnt);
 }
 
 /**
@@ -98,37 +84,7 @@ bool ChargeController::isStartChargeExecuting(void) {
  * @brief 充電を停止する
  *
  */
-void ChargeController::stopCharge(void) { _stopChargeStep = 1; }
-
-/**
- * @brief 充電を停止するループ処理
- *
- * @return true 処理完了
- * @return false 処理中
- */
-bool ChargeController::_stopChargeLoop(void) {
-  switch (_stopChargeStep) {
-    case 0:
-      // 何もしない
-      break;
-    case 1:
-      // 初期処理
-      _controlArmInit.start();
-      _stopChargeStep++;
-      break;
-    case 2:
-      // アームを初期位置に戻す
-      if (_controlArmInit.loop()) {
-        _stopChargeStep++;
-      }
-      break;
-    default:
-      // 充電停止完了
-      _stopChargeStep = 0;
-      return true;
-  }
-  return false;
-}
+void ChargeController::stopCharge(void) { _controlStopCharge.start(); }
 
 /**
  * @brief 充電終了処理中かどうか
@@ -137,64 +93,14 @@ bool ChargeController::_stopChargeLoop(void) {
  * @return false
  */
 bool ChargeController::isStopChargeExecuting(void) {
-  return _stopChargeStep != 0;
+  return _controlStopCharge.isExecuting();
 }
 
 /**
  * @brief ドローンの電源をONにする
  *
  */
-void ChargeController::powerOnDrone(void) { _powerOnDroneStep = 1; }
-
-/**
- * @brief ドローンの電源をONするループ処理
- *
- * @return true 処理完了
- * @return false 処理中
- */
-bool ChargeController::_powerOnDroneLoop(void) {
-  switch (_powerOnDroneStep) {
-    case 0:
-      // 何もしない
-      break;
-    case 1:
-      // 初期処理
-      _controlArmInit.start();
-      _powerOnDroneStep++;
-      break;
-    case 2:
-      // アームを初期位置に戻す
-      if (_controlArmInit.loop()) {
-        _controlArmCharge.start();
-        _powerOnDroneStep++;
-      }
-      break;
-    case 3:
-      // 充電接続する
-      if (_controlArmCharge.loop()) {
-        _powerOnDroneTimer.startTimer();
-        _powerOnDroneStep++;
-      }
-      break;
-    case 4:
-      // 1秒後に充電を終了する
-      if (_powerOnDroneTimer.getTime() >= POWER_ON_WAIT) {
-        _controlArmInit.start();
-        _powerOnDroneStep++;
-      }
-      break;
-    case 5:
-      // アームを初期位置に戻す
-      if (_controlArmInit.loop()) {
-        _powerOnDroneStep++;
-      }
-      break;
-    default:
-      _powerOnDroneStep = 0;
-      return true;
-  }
-  return false;
-}
+void ChargeController::powerOnDrone(void) { _controlPowerOnDrone.start(); }
 
 /**
  * @brief ドローンの起動処理中かどうか
@@ -203,7 +109,7 @@ bool ChargeController::_powerOnDroneLoop(void) {
  * @return false
  */
 bool ChargeController::isPowerOnExecuting(void) {
-  return _powerOnDroneStep != 0;
+  return _controlPowerOnDrone.isExecuting();
 }
 
 /**
@@ -365,7 +271,8 @@ bool ChargeController::checkServoTimeout(void) {
       }
       break;
     case 1:
-      if (isServoMoving() && _checkServoTimer.getTime() >= SERVO_MOVING_TIMEOUT) {
+      if (isServoMoving() &&
+          _checkServoTimer.getTime() >= SERVO_MOVING_TIMEOUT) {
         // 過電流がタイムアウトした場合
         logger.error("checkServoTimeout(): servo moving timeout. time = " +
                      String(_checkServoTimer.getTime()) +
@@ -423,10 +330,10 @@ void ChargeController::loop(void) {
   if (_controlStartCharge.loop()) {
     logger.info("Finish to start charge");
   }
-  if (_stopChargeLoop()) {
+  if (_controlStopCharge.loop()) {
     logger.info("Finish to stop charge");
   }
-  if (_powerOnDroneLoop()) {
+  if (_controlPowerOnDrone.loop()) {
     logger.info("Finish to power on Tello");
   }
   _servo.loop();
