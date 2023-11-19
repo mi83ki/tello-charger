@@ -42,8 +42,7 @@ ChargeController::ChargeController()
       _fet(FETController(CHARGE_CONTROL_PIN)),
       _current(CurrentReader(500)),
       _controlArmInit(ControlArmInit(&_servo, &_fet, &_current, &_chargeTimer)),
-      _initStep(0),
-      _chargeStep(0),
+      _controlArmCharge(ControlArmCharge(&_servo, &_fet, &_current, &_chargeTimer)),
       _startChargeStep(0),
       _stopChargeStep(0),
       _powerOnDroneStep(0),
@@ -62,87 +61,6 @@ ChargeController::ChargeController()
  *
  */
 ChargeController::~ChargeController() {}
-
-/**
- * @brief 充電接続するループ処理
- *
- * @param catchCnt 捕獲時に繰り返す回数
- * @param retryCnt USB接続するまでの動作をリトライする回数
- * @return true 処理完了
- * @return false 処理中
- */
-bool ChargeController::_chargeLoop(uint8_t catchCnt, uint8_t retryCnt) {
-  switch (_chargeStep) {
-    case 0:
-      // 何もしない
-      break;
-    case 1:
-      // 初期化
-      _catchCnt = 0;
-      _retryCnt = 0;
-      _chargeStep++;
-    case 2:
-      // 捕獲する
-      if (_servo.isReleaseDrone()) {
-        if (catchCnt - _catchCnt <= 1) {
-          _servo.catchDrone();
-        } else {
-          _servo.catchDroneOnce();
-        }
-        _catchCnt++;
-      } else if (_servo.isCatchDrone()) {
-        if (_catchCnt >= catchCnt)
-          // 指定した回数捕獲したら次に進む
-          _chargeStep++;
-        else
-          _servo.releaseDrone();
-      }
-      break;
-    case 3:
-      // USBを接続する
-      if (_servo.isDisconnectUsb())
-        _servo.connectUsb();
-      else if (_servo.isConnectUsb()) {
-        if (_retryCnt < retryCnt) {
-          _catchCnt = 0;
-          _chargeStep = 5;
-          _retryCnt++;
-        } else {
-          _chargeStep++;
-        }
-      }
-      break;
-    case 4:
-      // MOSFETをONにする
-      if (!_fet.read()) {
-        _fet.on();
-        _chargeTimer.startTimer();
-        logger.info("chargeLoop(): start charge timer");
-      } else {
-        _chargeStep = 99;
-      }
-      break;
-    case 5:
-      if (_servo.isConnectUsb())
-        _servo.disconnectUsb();
-      else if (_servo.isDisconnectUsb())
-        _chargeStep = 2;
-      break;
-    default:
-      // 初期位置に戻す処理完了
-      _chargeStep = 0;
-      return true;
-  }
-  return false;
-}
-
-/**
- * @brief 充電接続するループ処理（単発動作）
- *
- * @return true 処理完了
- * @return false 処理中
- */
-bool ChargeController::_chargeLoop(void) { return _chargeLoop(1, 0); }
 
 /**
  * @brief 充電を開始する
@@ -185,13 +103,13 @@ bool ChargeController::_startChargeLoop(void) {
     case 2:
       // アームを初期位置に戻す
       if (_controlArmInit.loop()) {
-        _chargeStep = 1;
+        _controlArmCharge.start();
         _startChargeStep++;
       }
       break;
     case 3:
       // 充電接続する
-      if (_chargeLoop(_catchCntTarget, _retryCntTarget)) {
+      if (_controlArmCharge.loop()) {
         _startChargeStep++;
       }
       break;
@@ -284,13 +202,13 @@ bool ChargeController::_powerOnDroneLoop(void) {
     case 2:
       // アームを初期位置に戻す
       if (_controlArmInit.loop()) {
-        _chargeStep = 1;
+        _controlArmCharge.start();
         _powerOnDroneStep++;
       }
       break;
     case 3:
       // 充電接続する
-      if (_chargeLoop()) {
+      if (_controlArmCharge.loop()) {
         _powerOnDroneTimer.startTimer();
         _powerOnDroneStep++;
       }

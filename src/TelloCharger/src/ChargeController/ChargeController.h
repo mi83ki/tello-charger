@@ -15,6 +15,7 @@
 #include "FETController.h"
 #include "ServoController.h"
 #include "ControlArmInit.h"
+#include "ControlArmCharge.h"
 
 class ChargeController {
  public:
@@ -71,11 +72,9 @@ class ChargeController {
 
   /** アーム初期位置駆動制御部 */
   ControlArmInit _controlArmInit;
+  /** アーム充電位置駆動制御部 */
+  ControlArmCharge _controlArmCharge;
 
-  /** 初期位置に戻す処理のステップ */
-  uint8_t _initStep;
-  /** 充電接続する処理のステップ */
-  uint8_t _chargeStep;
   /** 充電開始制御用の処理ステップ */
   uint8_t _startChargeStep;
   /** 充電停止制御用の処理ステップ */
