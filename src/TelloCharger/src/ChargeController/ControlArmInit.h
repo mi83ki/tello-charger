@@ -19,8 +19,6 @@
 class ControlArmInit : public ControlBase {
  public:
   ControlArmInit(ServoController *, FETController *, CurrentReader *, Timer *);
-  void start(void) override;
-  void stop(void) override;
   bool loop(void) override;
 
  private:

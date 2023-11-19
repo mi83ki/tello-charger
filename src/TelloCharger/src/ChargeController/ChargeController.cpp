@@ -43,7 +43,7 @@ ChargeController::ChargeController()
       _current(CurrentReader(500)),
       _controlArmInit(ControlArmInit(&_servo, &_fet, &_current, &_chargeTimer)),
       _controlArmCharge(ControlArmCharge(&_servo, &_fet, &_current, &_chargeTimer)),
-      _startChargeStep(0),
+      _controlStartCharge(ControlStartCharge(&_servo, &_fet, &_current, &_chargeTimer)),
       _stopChargeStep(0),
       _powerOnDroneStep(0),
       _powerOnDroneTimer(Timer()),
@@ -67,7 +67,7 @@ ChargeController::~ChargeController() {}
  *
  */
 void ChargeController::startCharge(void) {
-  _startChargeStep = 1;
+  _controlStartCharge.start();
   _catchCntTarget = CATCH_CNT;
   _retryCntTarget = RETRY_CNT;
 }
@@ -79,46 +79,9 @@ void ChargeController::startCharge(void) {
  * @param retryCnt USB接続するまでの動作をリトライする回数
  */
 void ChargeController::startCharge(uint8_t catchCnt, uint8_t retryCnt) {
-  _startChargeStep = 1;
+  _controlStartCharge.start();
   _catchCntTarget = catchCnt;
   _retryCntTarget = retryCnt;
-}
-
-/**
- * @brief 充電を開始するループ処理
- *
- * @return true 処理完了
- * @return false 処理中
- */
-bool ChargeController::_startChargeLoop(void) {
-  switch (_startChargeStep) {
-    case 0:
-      // 何もしない
-      break;
-    case 1:
-      // 初期処理
-      _controlArmInit.start();
-      _startChargeStep++;
-      break;
-    case 2:
-      // アームを初期位置に戻す
-      if (_controlArmInit.loop()) {
-        _controlArmCharge.start();
-        _startChargeStep++;
-      }
-      break;
-    case 3:
-      // 充電接続する
-      if (_controlArmCharge.loop()) {
-        _startChargeStep++;
-      }
-      break;
-    default:
-      // 充電開始完了
-      _startChargeStep = 0;
-      return true;
-  }
-  return false;
 }
 
 /**
@@ -128,7 +91,7 @@ bool ChargeController::_startChargeLoop(void) {
  * @return false
  */
 bool ChargeController::isStartChargeExecuting(void) {
-  return _startChargeStep != 0;
+  return _controlStartCharge.isExecuting();
 }
 
 /**
@@ -457,7 +420,7 @@ void ChargeController::loop(void) {
     }
   }
 
-  if (_startChargeLoop()) {
+  if (_controlStartCharge.loop()) {
     logger.info("Finish to start charge");
   }
   if (_stopChargeLoop()) {

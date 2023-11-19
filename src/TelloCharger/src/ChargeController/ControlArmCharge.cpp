@@ -16,21 +16,6 @@ ControlArmCharge::ControlArmCharge(ServoController *servo, FETController *fet,
     : ControlBase(servo, fet, current), _chargeTimer(chargeTimer) {}
 
 /**
- * @brief 処理を開始する
- *
- */
-void ControlArmCharge::start(void) {
-  _step = 1;
-  logger.info("ControlArmCharge.start(): _step = " + String(_step));
-}
-
-/**
- * @brief 処理を終了する
- *
- */
-void ControlArmCharge::stop(void) { _step = 0; }
-
-/**
  * @brief 充電接続するループ処理
  *
  * @param catchCnt 捕獲時に繰り返す回数

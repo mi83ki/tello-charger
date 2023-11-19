@@ -19,8 +19,9 @@ class ControlBase {
  public:
   ControlBase(ServoController *, FETController *, CurrentReader *);
   ~ControlBase();
-  virtual void start(void) = 0;
-  virtual void stop(void) = 0;
+  void start(void);
+  void stop(void);
+  bool isExecuting(void);
   virtual bool loop(void) = 0;
 
  protected:

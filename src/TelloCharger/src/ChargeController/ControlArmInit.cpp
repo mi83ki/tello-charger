@@ -16,21 +16,6 @@ ControlArmInit::ControlArmInit(ServoController *servo, FETController *fet,
     : ControlBase(servo, fet, current), _chargeTimer(chargeTimer) {}
 
 /**
- * @brief 処理を開始する
- *
- */
-void ControlArmInit::start(void) {
-  _step = 1;
-  logger.info("ControlArmInit.start(): _step = " + String(_step));
-}
-
-/**
- * @brief 処理を終了する
- *
- */
-void ControlArmInit::stop(void) { _step = 0; }
-
-/**
  * @brief アームを初期位置に戻すループ処理
  *
  * @return true 処理完了

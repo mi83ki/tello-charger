@@ -19,8 +19,6 @@
 class ControlArmCharge : public ControlBase {
  public:
   ControlArmCharge(ServoController *, FETController *, CurrentReader *, Timer *);
-  void start(void) override;
-  void stop(void) override;
   bool loop(void) override;
 
  private:

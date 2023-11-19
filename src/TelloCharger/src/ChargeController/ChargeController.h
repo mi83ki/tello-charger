@@ -16,6 +16,7 @@
 #include "ServoController.h"
 #include "ControlArmInit.h"
 #include "ControlArmCharge.h"
+#include "ControlStartCharge.h"
 
 class ChargeController {
  public:
@@ -59,7 +60,6 @@ class ChargeController {
   } ChargeStepType;
   bool _chargeLoop(uint8_t, uint8_t);
   bool _chargeLoop();
-  bool _startChargeLoop(void);
   bool _stopChargeLoop(void);
   bool _powerOnDroneLoop(void);
 
@@ -74,9 +74,9 @@ class ChargeController {
   ControlArmInit _controlArmInit;
   /** アーム充電位置駆動制御部 */
   ControlArmCharge _controlArmCharge;
+  /** 充電開始制御部 */
+  ControlStartCharge _controlStartCharge;
 
-  /** 充電開始制御用の処理ステップ */
-  uint8_t _startChargeStep;
   /** 充電停止制御用の処理ステップ */
   uint8_t _stopChargeStep;
   /** Tello電源ON制御用の処理ステップ */
