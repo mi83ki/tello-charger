@@ -14,6 +14,7 @@
 #include "CurrentReader.h"
 #include "FETController.h"
 #include "ServoController.h"
+#include "ControlArmInit.h"
 
 class ChargeController {
  public:
@@ -55,7 +56,6 @@ class ChargeController {
     STOP_CHARGE,
 
   } ChargeStepType;
-  bool _initLoop();
   bool _chargeLoop(uint8_t, uint8_t);
   bool _chargeLoop();
   bool _startChargeLoop(void);
@@ -68,6 +68,10 @@ class ChargeController {
   FETController _fet;
   /** 電流計測部 */
   CurrentReader _current;
+
+  /** アーム初期位置駆動制御部 */
+  ControlArmInit _controlArmInit;
+
   /** 初期位置に戻す処理のステップ */
   uint8_t _initStep;
   /** 充電接続する処理のステップ */

@@ -1,5 +1,5 @@
 /**
- * @file ControlInit.h
+ * @file ControlArmInit.h
  * @brief アーム初期位置制御ベースクラス
  * @author Tatsuya Miyazaki
  * @date 2023/11/18
@@ -16,11 +16,13 @@
 #include "FETController.h"
 #include "ServoController.h"
 
-class ControlInit : public ControlBase {
+class ControlArmInit : public ControlBase {
  public:
-  void start(void);
-  void stop(void);
-  void loop(void);
+  ControlArmInit(ServoController *, FETController *, CurrentReader *, Timer *);
+  void start(void) override;
+  void stop(void) override;
+  bool loop(void) override;
 
  private:
+  Timer *_chargeTimer;
 };

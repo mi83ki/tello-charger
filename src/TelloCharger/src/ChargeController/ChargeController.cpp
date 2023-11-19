@@ -29,7 +29,7 @@ const float ChargeController::CHARGE_CURRENT_CHARGING_THREASHOLD = 100.0;
 // この電流[mA]より小さくなると充電を終了する
 const float ChargeController::CHARGE_CURRENT_STOP_THREASHOLD = 200.0;
 // この電流[mA]より大きければサーボモータ稼働中
-const float ChargeController::SERVO_CURRENT_MOVING_THREASHOLD = 150.0;
+const float ChargeController::SERVO_CURRENT_MOVING_THREASHOLD = 250.0;
 // 以下の時間過電流を検知すればサーボを止める
 const uint32_t ChargeController::SERVO_MOVING_TIMEOUT = 3000;
 
@@ -41,6 +41,7 @@ ChargeController::ChargeController()
     : _servo(ServoController(SERVO_CATCH_PIN, SERVO_USB_PIN)),
       _fet(FETController(CHARGE_CONTROL_PIN)),
       _current(CurrentReader(500)),
+      _controlArmInit(ControlArmInit(&_servo, &_fet, &_current, &_chargeTimer)),
       _initStep(0),
       _chargeStep(0),
       _startChargeStep(0),
@@ -61,55 +62,6 @@ ChargeController::ChargeController()
  *
  */
 ChargeController::~ChargeController() {}
-
-/**
- * @brief アームを初期位置に戻すループ処理
- *
- * @return true 処理完了
- * @return false 処理中
- */
-bool ChargeController::_initLoop() {
-  switch (_initStep) {
-    case 0:
-      // 何もしない
-      break;
-    case 1:
-      // MOSFETをOFFする
-      if (_fet.read()) {
-        _fet.off();
-        _chargeTimer.stopTimer();
-        logger.info("chargeLoop(): stop charge timer, " +
-                    String(getChargeTimeMillis()));
-      } else {
-        _initStep++;
-      }
-      break;
-    case 2:
-      // USBアームが接続中であれば離す
-      if (_servo.isConnectUsb())
-        _servo.disconnectUsb();
-      else if (_servo.isDisconnectUsb())
-        _initStep++;
-      break;
-    case 3:
-      if (!isServoOverCurrent()) {
-        _initStep++;
-      } else {
-      }
-    case 4:
-      // 捕獲アームが捕獲中の場合は戻す
-      if (_servo.isCatchDrone())
-        _servo.releaseDrone();
-      else if (_servo.isReleaseDrone())
-        _initStep++;
-      break;
-    default:
-      // 初期位置に戻す処理完了
-      _initStep = 0;
-      return true;
-  }
-  return false;
-}
 
 /**
  * @brief 充電接続するループ処理
@@ -227,12 +179,12 @@ bool ChargeController::_startChargeLoop(void) {
       break;
     case 1:
       // 初期処理
-      _initStep = 1;
+      _controlArmInit.start();
       _startChargeStep++;
       break;
     case 2:
       // アームを初期位置に戻す
-      if (_initLoop()) {
+      if (_controlArmInit.loop()) {
         _chargeStep = 1;
         _startChargeStep++;
       }
@@ -280,12 +232,12 @@ bool ChargeController::_stopChargeLoop(void) {
       break;
     case 1:
       // 初期処理
-      _initStep = 1;
+      _controlArmInit.start();
       _stopChargeStep++;
       break;
     case 2:
       // アームを初期位置に戻す
-      if (_initLoop()) {
+      if (_controlArmInit.loop()) {
         _stopChargeStep++;
       }
       break;
@@ -326,12 +278,12 @@ bool ChargeController::_powerOnDroneLoop(void) {
       break;
     case 1:
       // 初期処理
-      _initStep = 1;
+      _controlArmInit.start();
       _powerOnDroneStep++;
       break;
     case 2:
       // アームを初期位置に戻す
-      if (_initLoop()) {
+      if (_controlArmInit.loop()) {
         _chargeStep = 1;
         _powerOnDroneStep++;
       }
@@ -346,13 +298,13 @@ bool ChargeController::_powerOnDroneLoop(void) {
     case 4:
       // 1秒後に充電を終了する
       if (_powerOnDroneTimer.getTime() >= POWER_ON_WAIT) {
-        _initStep = 1;
+        _controlArmInit.start();
         _powerOnDroneStep++;
       }
       break;
     case 5:
       // アームを初期位置に戻す
-      if (_initLoop()) {
+      if (_controlArmInit.loop()) {
         _powerOnDroneStep++;
       }
       break;
@@ -532,7 +484,7 @@ bool ChargeController::checkServoTimeout(void) {
       }
       break;
     case 1:
-      if (_checkServoTimer.getTime() >= SERVO_MOVING_TIMEOUT) {
+      if (isServoMoving() && _checkServoTimer.getTime() >= SERVO_MOVING_TIMEOUT) {
         // 過電流がタイムアウトした場合
         logger.error("checkServoTimeout(): servo moving timeout. time = " +
                      String(_checkServoTimer.getTime()) +

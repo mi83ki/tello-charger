@@ -21,9 +21,9 @@ class ControlBase {
   ~ControlBase();
   virtual void start(void) = 0;
   virtual void stop(void) = 0;
-  virtual void loop(void) = 0;
+  virtual bool loop(void) = 0;
 
- private:
+ protected:
   /** サーボ制御部 */
   ServoController *_servo;
   /** MOSFET制御部 */
