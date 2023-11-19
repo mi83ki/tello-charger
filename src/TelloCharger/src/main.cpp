@@ -23,10 +23,10 @@ ChargeController *charger;
 
 void setup() {
   M5.begin();
-  IPAddress ip(192, 168, 12, 12);      // for fixed IP Address
-  IPAddress gateway(192, 168, 12, 1);  //
-  IPAddress subnet(255, 255, 255, 0);  //
-  IPAddress DNS(192, 168, 12, 90);     //
+  // for fixed IP Address
+  IPAddress ip(MY_FIXED_IP_1, MY_FIXED_IP_2, MY_FIXED_IP_3, MY_FIXED_IP_4);
+  IPAddress gateway(MY_FIXED_IP_1, MY_FIXED_IP_2, MY_FIXED_IP_3, GATEWAY_IP_4);
+  IPAddress subnet(255, 255, 255, 0);
   WiFi.config(ip, gateway, subnet);
   charger = new ChargeController();
   wifi = new WiFiESP32(wifiSSID, wifiPassword);
