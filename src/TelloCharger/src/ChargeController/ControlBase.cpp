@@ -19,8 +19,13 @@
  * @param current
  */
 ControlBase::ControlBase(ServoController *servo, FETController *fet,
-                         CurrentReader *current)
-    : _servo(servo), _fet(fet), _current(current), _step(0), _timer(Timer()) {}
+                         CurrentReader *current, String className)
+    : _servo(servo),
+      _fet(fet),
+      _current(current),
+      _step(0),
+      _timer(Timer()),
+      _className(className) {}
 
 /**
  * @brief Destroy the Control Base:: Control Base object
@@ -34,7 +39,7 @@ ControlBase::~ControlBase() {}
  */
 void ControlBase::start(void) {
   _step = 1;
-  logger.info("start(): _step = " + String(_step));
+  logger.info(_className + ".start(): _step = " + String(_step));
 }
 
 /**
@@ -43,7 +48,7 @@ void ControlBase::start(void) {
  */
 void ControlBase::stop(void) {
   _step = 0;
-  logger.info("stop(): _step = " + String(_step));
+  logger.info(_className + ".stop(): _step = " + String(_step));
 }
 
 /**

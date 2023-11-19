@@ -13,7 +13,8 @@
 
 ControlArmCharge::ControlArmCharge(ServoController *servo, FETController *fet,
                                    CurrentReader *current, Timer *chargeTimer)
-    : ControlBase(servo, fet, current), _chargeTimer(chargeTimer) {}
+    : ControlBase(servo, fet, current, "ControlArmCharge"),
+      _chargeTimer(chargeTimer) {}
 
 /**
  * @brief 充電接続するループ処理

@@ -17,7 +17,8 @@
 
 class ControlBase {
  public:
-  ControlBase(ServoController *, FETController *, CurrentReader *);
+  ControlBase(ServoController *, FETController *, CurrentReader *,
+              String className = "ControlBase");
   ~ControlBase();
   void start(void);
   void stop(void);
@@ -35,4 +36,6 @@ class ControlBase {
   uint8_t _step;
   /** 制御用のタイマー */
   Timer _timer;
+  /** クラス名 */
+  String _className;
 };

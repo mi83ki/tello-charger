@@ -12,8 +12,9 @@
 #include <Log.h>
 
 ControlArmInit::ControlArmInit(ServoController *servo, FETController *fet,
-                         CurrentReader *current, Timer *chargeTimer)
-    : ControlBase(servo, fet, current), _chargeTimer(chargeTimer) {}
+                               CurrentReader *current, Timer *chargeTimer)
+    : ControlBase(servo, fet, current, "ControlArmInit"),
+      _chargeTimer(chargeTimer) {}
 
 /**
  * @brief アームを初期位置に戻すループ処理

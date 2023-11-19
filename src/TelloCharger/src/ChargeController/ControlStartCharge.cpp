@@ -15,7 +15,7 @@ ControlStartCharge::ControlStartCharge(ServoController *servo,
                                        FETController *fet,
                                        CurrentReader *current,
                                        Timer *chargeTimer)
-    : ControlBase(servo, fet, current),
+    : ControlBase(servo, fet, current, "ControlStartCharge"),
       _controlArmInit(ControlArmInit(servo, fet, current, chargeTimer)),
       _controlArmCharge(
           ControlArmCharge(servo, fet, current, chargeTimer)) {}
