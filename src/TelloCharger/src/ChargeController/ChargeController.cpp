@@ -47,10 +47,23 @@ ChargeController::ChargeController()
 ChargeController::~ChargeController() {}
 
 /**
+ * @brief 処理を停止する
+ *
+ */
+void ChargeController::stop(void) {
+  _controlStartCharge.stop();
+  _controlStopCharge.stop();
+  _controlPowerOnDrone.stop();
+}
+
+/**
  * @brief 充電を開始する
  *
  */
-void ChargeController::startCharge(void) { _controlStartCharge.start(); }
+void ChargeController::startCharge(void) {
+  stop();
+  _controlStartCharge.start();
+}
 
 /**
  * @brief 充電を開始する
@@ -59,6 +72,7 @@ void ChargeController::startCharge(void) { _controlStartCharge.start(); }
  * @param retryCnt USB接続するまでの動作をリトライする回数
  */
 void ChargeController::startCharge(uint8_t catchCnt, uint8_t retryCnt) {
+  stop();
   _controlStartCharge.start(catchCnt, retryCnt);
 }
 
@@ -76,7 +90,10 @@ bool ChargeController::isStartChargeExecuting(void) {
  * @brief 充電を停止する
  *
  */
-void ChargeController::stopCharge(void) { _controlStopCharge.start(); }
+void ChargeController::stopCharge(void) {
+  stop();
+  _controlStopCharge.start();
+}
 
 /**
  * @brief 充電終了処理中かどうか
@@ -92,7 +109,10 @@ bool ChargeController::isStopChargeExecuting(void) {
  * @brief ドローンの電源をONにする
  *
  */
-void ChargeController::powerOnDrone(void) { _controlPowerOnDrone.start(); }
+void ChargeController::powerOnDrone(void) {
+  stop();
+  _controlPowerOnDrone.start();
+}
 
 /**
  * @brief ドローンの起動処理中かどうか

@@ -43,10 +43,10 @@ void loop() {
   // ボタン押下時の処理
   M5.update();
   if (M5.Btn.wasPressed()) {
-    if (charger->isCatchDrone())
-      charger->stopCharge();
-    else
+    if (charger->isReleaseDrone())
       charger->startCharge();
+    else
+      charger->stopCharge();
   }
 
   // キーボードからのWASD入力時の処理

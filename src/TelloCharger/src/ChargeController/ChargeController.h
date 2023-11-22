@@ -23,6 +23,7 @@ class ChargeController {
  public:
   ChargeController();
   ~ChargeController();
+  void stop(void);
   void startCharge(void);
   void startCharge(uint8_t, uint8_t);
   bool isStartChargeExecuting(void);
