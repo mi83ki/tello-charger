@@ -10,7 +10,7 @@
 #include "ServoController.h"
 
 /** ドローンを離すときのサーボ角度[deg] */
-const int16_t ServoController::DRONE_RELEASE_ANGLE = -31;
+const int16_t ServoController::DRONE_RELEASE_ANGLE = -45;
 /** ドローンを捕まえるときのサーボ角度[deg] */
 const int16_t ServoController::DRONE_CATCH_ANGLE = 8;
 /** ドローンを位置決めで捕まえるときのサーボ角度[deg] */
