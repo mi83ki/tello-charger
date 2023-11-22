@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <Timer.h>
 
+#include "CheckServoCurrent.h"
 #include "ControlBase.h"
 #include "CurrentReader.h"
 #include "FETController.h"
@@ -21,6 +22,7 @@ class ControlArmCharge : public ControlBase {
   ControlArmCharge(ServoController *, FETController *, CurrentReader *,
                    Timer *);
   void start(void);
+  void stop(void);
   void start(uint8_t, uint8_t);
   bool loop(void) override;
 
@@ -34,7 +36,4 @@ class ControlArmCharge : public ControlBase {
   uint8_t _retryCnt;
   /** USBを接続するまでの動作を行う目標回数 */
   uint8_t _retryCntTarget;
-
-  static const uint8_t CATCH_CNT;
-  static const uint8_t RETRY_CNT;
 };

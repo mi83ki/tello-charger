@@ -31,6 +31,16 @@ ControlPowerOnDrone::ControlPowerOnDrone(ServoController *servo,
       _controlArmCharge(ControlArmCharge(servo, fet, current, chargeTimer)) {}
 
 /**
+ * @brief 処理を終了する
+ *
+ */
+void ControlPowerOnDrone::stop(void) {
+  ControlBase::stop();
+  _controlArmInit.stop();
+  _controlArmCharge.stop();
+}
+
+/**
  * @brief ドローンの電源をONするループ処理
  *
  * @return true 処理完了

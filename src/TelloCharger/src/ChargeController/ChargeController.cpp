@@ -22,10 +22,6 @@ const uint8_t ChargeController::CHARGE_CONTROL_PIN = G22;
 const float ChargeController::CHARGE_CURRENT_CHARGING_THREASHOLD = 100.0;
 // この電流[mA]より小さくなると充電を終了する
 const float ChargeController::CHARGE_CURRENT_STOP_THREASHOLD = 200.0;
-// この電流[mA]より大きければサーボモータ稼働中
-const float ChargeController::SERVO_CURRENT_MOVING_THREASHOLD = 250.0;
-// 以下の時間過電流を検知すればサーボを止める
-const uint32_t ChargeController::SERVO_MOVING_TIMEOUT = 3000;
 
 /**
  * @brief Construct a new Servo Controller:: Servo Controller object
@@ -34,7 +30,7 @@ const uint32_t ChargeController::SERVO_MOVING_TIMEOUT = 3000;
 ChargeController::ChargeController()
     : _servo(ServoController(SERVO_CATCH_PIN, SERVO_USB_PIN)),
       _fet(FETController(CHARGE_CONTROL_PIN)),
-      _current(CurrentReader(500)),
+      _current(CurrentReader(200)),
       _chargeTimer(Timer()),
       _controlStartCharge(
           ControlStartCharge(&_servo, &_fet, &_current, &_chargeTimer)),
@@ -42,9 +38,7 @@ ChargeController::ChargeController()
           ControlStopCharge(&_servo, &_fet, &_current, &_chargeTimer)),
       _controlPowerOnDrone(
           ControlPowerOnDrone(&_servo, &_fet, &_current, &_chargeTimer)),
-      _isServoMovingPrevious(false),
-      _checkServoStep(0),
-      _checkServoTimer(Timer()) {}
+      _checkServoCurrent(CheckServoCurrent(&_servo, &_fet, &_current)) {}
 
 /**
  * @brief Destroy the Servo Controller:: Servo Controller object
@@ -56,9 +50,7 @@ ChargeController::~ChargeController() {}
  * @brief 充電を開始する
  *
  */
-void ChargeController::startCharge(void) {
-  _controlStartCharge.start();
-}
+void ChargeController::startCharge(void) { _controlStartCharge.start(); }
 
 /**
  * @brief 充電を開始する
@@ -230,70 +222,6 @@ bool ChargeController::haveToRelease(void) {
 }
 
 /**
- * @brief サーボモータが稼働中かどうか
- *
- * @return true
- * @return false
- */
-bool ChargeController::isServoMoving(void) {
-  return !isCharging() && getCurrent() >= SERVO_CURRENT_MOVING_THREASHOLD;
-}
-
-/**
- * @brief サーボモータが過電流かどうか
- *
- * @return true
- * @return false
- */
-bool ChargeController::isServoOverCurrent(void) {
-  return !_fet.read() && isTargetAngle() &&
-         getCurrent() >= SERVO_CURRENT_MOVING_THREASHOLD;
-}
-
-/**
- * @brief サーボモータが過電流タイムアウトしたかどうか
- *
- */
-bool ChargeController::checkServoTimeout(void) {
-  bool ret = false;
-  static Timer timer = Timer(500);
-  if (timer.isCycleTime()) {
-    logger.debug("checkServoTimeout(): current = " + String(getCurrent()) +
-                 ", isMoving = " + String(isServoMoving()));
-  }
-  switch (_checkServoStep) {
-    case 0:
-      if (isTargetAngle() && isServoMoving()) {
-        // サーボ指示値が収束した状態で過電流を検知した
-        _checkServoTimer.startTimer();
-        _checkServoStep++;
-        logger.debug("checkServoTimeout(): start timer");
-      }
-      break;
-    case 1:
-      if (isServoMoving() &&
-          _checkServoTimer.getTime() >= SERVO_MOVING_TIMEOUT) {
-        // 過電流がタイムアウトした場合
-        logger.error("checkServoTimeout(): servo moving timeout. time = " +
-                     String(_checkServoTimer.getTime()) +
-                     ", current = " + String(getCurrent()));
-        ret = true;
-      } else if (!isTargetAngle() || !isServoMoving()) {
-        // サーボの稼働が終了した
-        logger.debug("checkServoTimeout(): finish servo moving. time = " +
-                     String(_checkServoTimer.getTime()) +
-                     ", current = " + String(getCurrent()));
-        _checkServoStep = 0;
-      }
-      break;
-    default:
-      _checkServoStep = 0;
-      break;
-  }
-  return ret;
-}
-
-/**
  * @brief ループ処理
  *
  */
@@ -319,22 +247,24 @@ void ChargeController::loop(void) {
     requestedStopCharge = false;
   }
 
-  if (checkServoTimeout()) {
-    if (isCatchDrone()) {
-      stopCharge();
-    } else if (isReleaseDrone()) {
-      startCharge();
-    }
+  // サーボ電流監視
+  if (_checkServoCurrent.haveToEmargencyStopServo()) {
+    _controlStartCharge.stop();
+    _controlStopCharge.stop();
+    _controlPowerOnDrone.stop();
   }
 
   if (_controlStartCharge.loop()) {
-    logger.info("Finish to start charge");
+    logger.info("ChargeController.loop(): Finish to start charge");
   }
   if (_controlStopCharge.loop()) {
-    logger.info("Finish to stop charge");
+    logger.info("ChargeController.loop(): Finish to stop charge");
   }
   if (_controlPowerOnDrone.loop()) {
-    logger.info("Finish to power on Tello");
+    logger.info("ChargeController.loop(): Finish to power on Tello");
+  }
+  if (_checkServoCurrent.loop()) {
+    logger.info("ChargeController.loop(): Finish to check servo current");
   }
   _servo.loop();
 }

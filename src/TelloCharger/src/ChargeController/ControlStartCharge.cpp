@@ -57,6 +57,16 @@ void ControlStartCharge::start(uint8_t catchCnt, uint8_t retryCnt) {
 }
 
 /**
+ * @brief 処理を終了する
+ *
+ */
+void ControlStartCharge::stop(void) {
+  ControlBase::stop();
+  _controlArmInit.stop();
+  _controlArmCharge.stop();
+}
+
+/**
  * @brief 充電を開始するループ処理
  *
  * @return true 処理完了

@@ -17,6 +17,8 @@ class ServoController {
  public:
   ServoController(uint8_t, uint8_t);
   ~ServoController();
+  ServoESP32 *servoCatch(void) { return &_servoCatch; }
+  ServoESP32 *servoUsb(void) { return &_servoUsb; }
   float getServoCatch(void);
   void setServoCatch(float);
   float getServoUsb(void);

@@ -11,6 +11,14 @@
 
 #include <Log.h>
 
+/**
+ * @brief Construct a new Control Arm Init:: Control Arm Init object
+ * 
+ * @param servo 
+ * @param fet 
+ * @param current 
+ * @param chargeTimer 
+ */
 ControlArmInit::ControlArmInit(ServoController *servo, FETController *fet,
                                CurrentReader *current, Timer *chargeTimer)
     : ControlBase(servo, fet, current, "ControlArmInit"),
@@ -45,13 +53,6 @@ bool ControlArmInit::loop(void) {
       else if (_servo->isDisconnectUsb())
         _step++;
       break;
-    /*
-    case 3:
-      if (!isServoOverCurrent()) {
-        _step++;
-      } else {
-      }
-      */
     case 3:
       // 捕獲アームが捕獲中の場合は戻す
       if (_servo->isCatchDrone())

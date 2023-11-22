@@ -22,6 +22,7 @@ class ControlPowerOnDrone : public ControlBase {
  public:
   ControlPowerOnDrone(ServoController *, FETController *, CurrentReader *,
                       Timer *);
+  void stop(void);
   bool loop(void) override;
 
  private:

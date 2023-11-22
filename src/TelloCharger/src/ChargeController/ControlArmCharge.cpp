@@ -11,11 +11,6 @@
 
 #include <Log.h>
 
-/** 充電開始時に何回捕獲するか */
-const uint8_t ControlArmCharge::CATCH_CNT = 2;
-/** 充電開始時に何回USB接続をリトライするか */
-const uint8_t ControlArmCharge::RETRY_CNT = 1;
-
 ControlArmCharge::ControlArmCharge(ServoController *servo, FETController *fet,
                                    CurrentReader *current, Timer *chargeTimer)
     : ControlBase(servo, fet, current, "ControlArmCharge"),
@@ -31,8 +26,8 @@ ControlArmCharge::ControlArmCharge(ServoController *servo, FETController *fet,
  */
 void ControlArmCharge::start(void) {
   ControlBase::start();
-  _catchCntTarget = CATCH_CNT;
-  _retryCntTarget = RETRY_CNT;
+  _catchCntTarget = 1;
+  _retryCntTarget = 0;
 }
 
 /**
@@ -45,6 +40,16 @@ void ControlArmCharge::start(uint8_t catchCnt, uint8_t retryCnt) {
   ControlBase::start();
   _catchCntTarget = catchCnt;
   _retryCntTarget = retryCnt;
+}
+
+/**
+ * @brief 処理を終了する
+ *
+ */
+void ControlArmCharge::stop(void) {
+  ControlBase::stop();
+  _fet->off();
+  _chargeTimer->stopTimer();
 }
 
 /**
@@ -87,14 +92,22 @@ bool ControlArmCharge::loop(void) {
       else if (_servo->isConnectUsb()) {
         if (_retryCnt < _retryCntTarget) {
           _catchCnt = 0;
-          _step = 5;
+          _step = 6;
           _retryCnt++;
         } else {
+          _timer.startTimer();
           _step++;
         }
       }
       break;
     case 4:
+      if (CheckServoCurrent::isServoMoving(_current->getCurrent())) {
+        _timer.startTimer();
+      } else if (_timer.getTime() > 5000) {
+        _step++;
+      }
+      break;
+    case 5:
       // MOSFETをONにする
       if (!_fet->read()) {
         _fet->on();
@@ -104,7 +117,7 @@ bool ControlArmCharge::loop(void) {
         _step = 99;
       }
       break;
-    case 5:
+    case 6:
       if (_servo->isConnectUsb())
         _servo->disconnectUsb();
       else if (_servo->isDisconnectUsb())

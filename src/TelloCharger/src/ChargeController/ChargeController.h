@@ -11,12 +11,13 @@
 #include <Arduino.h>
 #include <Timer.h>
 
+#include "CheckServoCurrent.h"
+#include "ControlPowerOnDrone.h"
+#include "ControlStartCharge.h"
+#include "ControlStopCharge.h"
 #include "CurrentReader.h"
 #include "FETController.h"
 #include "ServoController.h"
-#include "ControlStartCharge.h"
-#include "ControlStopCharge.h"
-#include "ControlPowerOnDrone.h"
 
 class ChargeController {
  public:
@@ -44,10 +45,6 @@ class ChargeController {
   bool isFullCharge(void);
   bool haveToRelease(void);
 
-  bool isServoMoving(void);
-  bool isServoOverCurrent(void);
-  bool checkServoTimeout(void);
-
   void loop(void);
   String toString(void);
 
@@ -58,11 +55,6 @@ class ChargeController {
     STOP_CHARGE,
 
   } ChargeStepType;
-  bool _chargeLoop(uint8_t, uint8_t);
-  bool _chargeLoop();
-  bool _stopChargeLoop(void);
-  bool _powerOnDroneLoop(void);
-
   /** サーボ制御部 */
   ServoController _servo;
   /** MOSFET制御部 */
@@ -78,17 +70,12 @@ class ChargeController {
   ControlStopCharge _controlStopCharge;
   /** ドローン電源ON制御部 */
   ControlPowerOnDrone _controlPowerOnDrone;
-
-  /** サーボモータの過電流対策 */
-  bool _isServoMovingPrevious;
-  uint8_t _checkServoStep;
-  Timer _checkServoTimer;
+  /** サーボ電流監視部 */
+  CheckServoCurrent _checkServoCurrent;
 
   static const uint8_t SERVO_CATCH_PIN;
   static const uint8_t SERVO_USB_PIN;
   static const uint8_t CHARGE_CONTROL_PIN;
   static const float CHARGE_CURRENT_CHARGING_THREASHOLD;
   static const float CHARGE_CURRENT_STOP_THREASHOLD;
-  static const float SERVO_CURRENT_MOVING_THREASHOLD;
-  static const uint32_t SERVO_MOVING_TIMEOUT;
 };

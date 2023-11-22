@@ -24,6 +24,7 @@ class ControlStartCharge : public ControlBase {
                      Timer *);
   void start(void);
   void start(uint8_t, uint8_t);
+  void stop(void);
   bool loop(void) override;
 
  private:

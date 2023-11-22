@@ -21,6 +21,7 @@ class ControlStopCharge : public ControlBase {
  public:
   ControlStopCharge(ServoController *, FETController *, CurrentReader *,
                     Timer *);
+  void stop(void);
   bool loop(void) override;
 
  private:

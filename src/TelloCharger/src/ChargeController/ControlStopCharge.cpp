@@ -25,6 +25,15 @@ ControlStopCharge::ControlStopCharge(ServoController *servo, FETController *fet,
       _controlArmInit(ControlArmInit(servo, fet, current, chargeTimer)) {}
 
 /**
+ * @brief 処理を終了する
+ *
+ */
+void ControlStopCharge::stop(void) {
+  ControlBase::stop();
+  _controlArmInit.stop();
+}
+
+/**
  * @brief 充電を停止するループ処理
  *
  * @return true 処理完了

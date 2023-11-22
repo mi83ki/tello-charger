@@ -43,7 +43,7 @@ void loop() {
   // ボタン押下時の処理
   M5.update();
   if (M5.Btn.wasPressed()) {
-    if (charger->isCharging())
+    if (charger->isCatchDrone())
       charger->stopCharge();
     else
       charger->startCharge();
