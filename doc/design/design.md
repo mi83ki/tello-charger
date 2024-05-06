@@ -158,4 +158,4 @@ ATOM Liteに書き込むファームウェアの設計内容を記載します�
 TelloChargerは上位システムからの充電指示をWebAPIで受け付けるようにします。\
 以下にWebAPI仕様を記載します。
 
-[Tello Charger API](api.yaml)
+[Tello Charger API](../openapi/api.html)

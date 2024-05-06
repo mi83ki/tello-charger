@@ -131,7 +131,7 @@ WiFiの接続先SSIDとパスワードは以下の手順で設定します。
 TelloChargerは上位システムからWebAPIで制御します。\
 以下のAPI仕様を参照してください。
 
-[Tello Charger API](api.yaml)
+[Tello Charger API](doc/openapi/api.html)
 
 ## 4. 概要設計書
 
