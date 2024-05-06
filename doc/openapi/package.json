@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "swaggerExport": "redoc-cli build api.yaml --output api.html"
+  },
+  "dependencies": {
+    "redoc-cli": "^0.13.21"
+  }
+}
