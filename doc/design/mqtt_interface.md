@@ -80,7 +80,6 @@
 
 ```json
 {
-  "timestamp": "2025-05-02T11:00:00Z",
   "charge": true,
   "current": 0,
   "chargingTime": 0,
@@ -112,7 +111,6 @@
 
 ```json
 {
-  "timestamp": "2025-05-02T11:00:00Z",
   "req_id": "550e8400-e29b-41d4-a716-446655440000",
   "status": "SUCCESS",
   "error": ""
@@ -132,7 +130,6 @@
 
 ```json
 {
-  "timestamp": "2025-05-02T11:05:01Z",
   "req_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "status": "SUCCESS",
   "error": ""
@@ -152,7 +149,6 @@
 
 ```json
 {
-  "timestamp": "2025-05-02T11:10:02Z",
   "req_id": "1c16f6e0-6737-4d62-8c06-9f9fbc2384d8",
   "status": "SUCCESS",
   "error": ""
