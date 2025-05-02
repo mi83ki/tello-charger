@@ -22,6 +22,7 @@ Tello Chargerの概要設計について記載します。
   - [5.2. データフロー図](#52-データフロー図)
   - [5.3. モジュール構造図](#53-モジュール構造図)
   - [5.4. WebAPI仕様](#54-webapi仕様)
+  - [MQTT通信仕様](#mqtt通信仕様)
 
 ## 1. Telloとは
 
@@ -159,3 +160,10 @@ TelloChargerは上位システムからの充電指示をWebAPIで受け付け�
 以下にWebAPI仕様を記載します。
 
 [Tello Charger API](../openapi/api.html)
+
+### MQTT通信仕様
+
+MQTT brokerを経由して通信することも可能です。\
+以下にMQTT通信仕様を記載します。
+
+[MQTT通信仕様](mqtt_interface.md)
