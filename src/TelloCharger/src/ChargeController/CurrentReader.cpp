@@ -10,6 +10,10 @@
 
 #include <Adafruit_INA219.h>
 #include <Log.h>
+#include <M5Unified.h>
+#include <Wire.h>
+
+#include "pinConfig.h"
 
 Adafruit_INA219 ina219;
 
@@ -22,12 +26,13 @@ CurrentReader::CurrentReader(uint32_t cycleTime)
       _timer(Timer(cycleTime)),
       _current(0.0),
       _movAveFilter(MovAveFilter(10, 0)) {
-  Wire1.begin(26, 32);
+  Wire.begin(INA_SDA_PIN, INA_SCL_PIN);
   if (!ina219.begin()) {
     logger.error("CurrentReader(): Failed to find INA219 chip");
   } else {
     _isConnect = true;
     _movAveFilter.setData(FLOAT_TO_FIX(_getCurrent()));
+    logger.info("CurrentReader(): INA219 chip found!");
   }
 }
 
@@ -71,8 +76,9 @@ float CurrentReader::getCurrent(void) { return _current; }
 void CurrentReader::loop() {
   if (_timer.isCycleTime()) {
     float current = _getCurrent();
-    _current =
-        FIX_TO_FLOAT(_movAveFilter.movingAverage(FLOAT_TO_FIX(current)));
+    _current = FIX_TO_FLOAT(_movAveFilter.movingAverage(FLOAT_TO_FIX(current)));
+    // logger.trace("CurrentReader.loop(): current = " + String(current) +
+    //              ", movave = " + String(_current));
   }
 }
 

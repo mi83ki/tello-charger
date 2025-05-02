@@ -18,3 +18,11 @@
 
 /** ゲートウェイのIPアドレス（"MY_FIXED_IP_1"."MY_FIXED_IP_2"."MY_FIXED_IP_3"."GATEWAY_IP_4"） */
 #define GATEWAY_IP_4 (1)
+
+/** MQTTのホスト */
+#define MQTT_HOST "192.168.0.100"
+/** MQTTのポート番号 */
+#define MQTT_PORT 1883
+/** MQTTのバッファサイズ(デフォルトは256バイト) */
+// #define MQTT_BUFFER_SIZE 32768
+#define MQTT_BUFFER_SIZE 256

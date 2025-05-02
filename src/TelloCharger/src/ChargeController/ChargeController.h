@@ -40,6 +40,7 @@ class ChargeController {
   bool isDisconnectUsb(void);
   bool isTargetAngle(void);
   uint32_t getChargeTimeMillis(void);
+  float getChargeTimeSec(void);
 
   float getCurrent(void);
   bool isChargingCurrent(void);
@@ -74,9 +75,6 @@ class ChargeController {
   /** サーボ電流監視部 */
   CheckServoCurrent _checkServoCurrent;
 
-  static const uint8_t SERVO_CATCH_PIN;
-  static const uint8_t SERVO_USB_PIN;
-  static const uint8_t CHARGE_CONTROL_PIN;
   static const float CHARGE_CURRENT_CHARGING_THREASHOLD;
   static const float CHARGE_CURRENT_STOP_THREASHOLD;
 };

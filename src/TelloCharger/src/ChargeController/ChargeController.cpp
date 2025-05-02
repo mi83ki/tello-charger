@@ -8,15 +8,9 @@
  */
 
 #include "ChargeController.h"
+#include "pinConfig.h"
 
 #include <Log.h>
-
-/** 捕獲サーボのピン番号 */
-const uint8_t ChargeController::SERVO_CATCH_PIN = 19;
-/** USBサーボのピン番号 */
-const uint8_t ChargeController::SERVO_USB_PIN = 23;
-/** MOSFETのピン番号 */
-const uint8_t ChargeController::CHARGE_CONTROL_PIN = G22;
 
 // この電流[mA]より大きければ充電中
 const float ChargeController::CHARGE_CURRENT_CHARGING_THREASHOLD = 100.0;
@@ -152,12 +146,21 @@ bool ChargeController::isInitPos(void) {
 }
 
 /**
- * @brief 充電時間を取得する
+ * @brief 充電時間をミリ秒で取得する
  *
  * @return uint32_t 充電時間[ms]
  */
 uint32_t ChargeController::getChargeTimeMillis(void) {
   return _chargeTimer.getTime();
+}
+
+/**
+ * @brief 充電時間を取得する[sec]
+ *
+ * @return float 充電時間[sec]
+ */
+float ChargeController::getChargeTimeSec(void) {
+  return float(_chargeTimer.getTime()) / 1000;
 }
 
 /**
