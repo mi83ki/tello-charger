@@ -80,7 +80,7 @@ void HttpServer::_onChargeGet(AsyncWebServerRequest *request) {
   JsonObject root = response->getRoot();
   root["charge"] = _charger->isCharging();
   root["current"] = _charger->getCurrent();
-  root["chargingTime"] = _charger->getChargeTimeMillis();
+  root["chargingTime"] = _charger->getChargeTimeSec();
   root["isStartChargeExecuting"] = _charger->isStartChargeExecuting();
   root["isStopChargeExecuting"] = _charger->isStopChargeExecuting();
   root["isPowerOnExecuting"] = _charger->isPowerOnExecuting();
