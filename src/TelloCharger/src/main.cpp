@@ -10,8 +10,9 @@
 #include <WiFiESP32.h>
 
 #include "ChargeController/ChargeController.h"
+#include "HttpServer/DroneChargerProtocol.h"
 #include "HttpServer/HttpServer.h"
-#include "HttpServer/MessageBuilder.h"
+#include "HttpServer/MqttHandler.h"
 #include "ssid.h"
 
 /** WiFiのSSID（ssid.h（git管理対象外）にて定義） */
@@ -25,6 +26,8 @@ const uint8_t httpPort = 80;
 WiFiESP32 *wifi;
 /** MQTTクライアントインスタンス */
 MQTTClientESP32 *mqttClient;
+/** MQTTハンドラインスタンス */
+MqttHandler *mqttHandler;
 /** WebAPIインスタンス */
 HttpServer *server;
 /** 充電制御インスタンス */
@@ -34,11 +37,7 @@ ChargeController *charger;
  * @brief WiFi通信用Task
  */
 void taskWifi(void *) {
-  static uint32_t last = millis();
-  Timer timer = Timer(500);
   wifi = new WiFiESP32(wifiSSID, wifiPassword);
-  server = new HttpServer(httpPort, charger);
-  mqttClient = new MQTTClientESP32(MQTT_HOST, MQTT_PORT, MQTT_BUFFER_SIZE);
 
   // for fixed IP Address
   IPAddress ip(MY_FIXED_IP_1, MY_FIXED_IP_2, MY_FIXED_IP_3, MY_FIXED_IP_4);
@@ -52,24 +51,19 @@ void taskWifi(void *) {
     // ESP.restart();
   }
 
+  server = new HttpServer(httpPort, charger);
+  mqttClient = new MQTTClientESP32(MQTT_HOST, MQTT_PORT, MQTT_BUFFER_SIZE);
+  mqttHandler = new MqttHandler(mqttClient, charger, DEFAULT_MAC_ADDRESS);
+
   while (true) {
-    if (timer.isCycleTime()) {
-      if (wifi->healthCheck()) {
-        server->begin();
-        mqttClient->healthCheck();
-        String pubTopic =
-            "drone-charger/" + DEFAULT_MAC_ADDRESS + "/charge/status";
-        String payload = buildChargeStatusJson(
-            charger->isCharging(), charger->getCurrent(),
-            charger->getChargeTimeSec(), charger->isStartChargeExecuting(),
-            charger->isStopChargeExecuting(), charger->isPowerOnExecuting());
-        mqttClient->publish(pubTopic, payload);
-      } else {
-        server->end();
-      }
+    if (wifi->healthCheck()) {
+      server->begin();
+      mqttHandler->loop();
+    } else {
+      server->end();
     }
-    vTaskDelay(1);
   }
+  vTaskDelay(1);
 }
 
 void setup() {
