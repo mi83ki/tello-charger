@@ -1,10 +1,5 @@
-#include <Arduino.h>
-#include <M5Unified.h>
-
-#ifdef M5STACK_M5ATOMS3
-#define USE_M5ATOM_S3
-#endif
 #include <Log.h>
+#include <M5Unified.h>
 #include <MQTTClientESP32.h>
 #include <MacUtils.h>
 #include <WiFiESP32.h>
@@ -62,8 +57,8 @@ void taskWifi(void *) {
     } else {
       server->end();
     }
+    vTaskDelay(1);
   }
-  vTaskDelay(1);
 }
 
 void setup() {

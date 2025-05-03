@@ -27,6 +27,7 @@
 		},
 		"files.associations": {
 			"*.ejs": "html",
+			"*.ect": "html",
 			"array": "cpp",
 			"chrono": "cpp",
 			"deque": "cpp",
@@ -47,7 +48,8 @@
 			"unordered_set": "cpp",
 			"string_view": "cpp",
 			"sstream": "cpp",
-			"istream": "cpp"
+			"istream": "cpp",
+			"xlocinfo": "cpp"
 		},
 	}
 }
